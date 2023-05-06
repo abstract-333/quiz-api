@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer
 from fastapi_cache.decorator import cache
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +11,7 @@ from utils.result_into_list import ResultIntoList
 university_router = APIRouter(prefix="/university", tags=["University"])
 
 
-@university_router.get("/get-all", dependencies=[Depends(HTTPBearer())], name="university:get all", responses={
+@university_router.get("/get-all", name="university:get all", responses={
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
         "description": "Internal sever error.",
     },
