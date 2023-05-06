@@ -14,8 +14,8 @@ app = FastAPI(
 )
 admin = Admin(app, engine)
 
-# app.add_middleware(PyInstrumentProfilerMiddleware)
 
+# app.add_middleware(PyInstrumentProfilerMiddleware)
 
 
 @app.on_event("startup")
