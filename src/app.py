@@ -1,5 +1,5 @@
 from sqladmin import Admin
-from admin.schemas import UserAdmin
+from admin.schemas import UserAdmin, UniversityAdmin
 from auth.router import auth_router
 from database import engine
 from quiz.router import quiz_router
@@ -25,6 +25,7 @@ async def startup():
 
 
 admin.add_view(UserAdmin)
+admin.add_view(UniversityAdmin)
 
 app.include_router(auth_router)
 app.include_router(quiz_router)

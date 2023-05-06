@@ -34,7 +34,7 @@ user = Table(
 
 class User(SQLAlchemyBaseUserTable[int], Base):
     id = Column(Integer, primary_key=True)
-    email = Column(String(length=50), nullable=False)
+    email = Column(String(length=50), nullable=False, index=True)
     username = Column(String(length=25), nullable=False)
     role_id = Column(Integer, ForeignKey(role.c.id))
     university_id = Column(Integer, ForeignKey(university.c.id), nullable=True)
