@@ -82,9 +82,9 @@ async def add_quiz(new_quiz: QuizRead, verified_user: User = Depends(current_use
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error.")
 
 
-@quiz_router.get("/get/", name="quiz: patch quiz", dependencies=[Depends(HTTPBearer())])
-async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(current_user),
-                     session: AsyncSession = Depends(get_async_session)):
+# @quiz_router.get("/get/", name="quiz: patch quiz", dependencies=[Depends(HTTPBearer())])
+# async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(current_user),
+#                      session: AsyncSession = Depends(get_async_session)):
 
 @quiz_router.patch("/patch", name="quiz: patch quiz", dependencies=[Depends(HTTPBearer())])
 async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(current_user),
