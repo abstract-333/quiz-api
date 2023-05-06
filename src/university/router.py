@@ -18,7 +18,7 @@ university_router = APIRouter(prefix="/university", tags=["University"])
 
 })
 @cache(expire=3600 * 24)  # TTL = 3600 seconds * 24 = one hour * 24 = one day
-async def get_universities(session: AsyncSession = Depends(get_async_session), user=Depends(current_user)):
+async def get_universities(session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(university)
         result_proxy = await session.execute(query)
