@@ -25,7 +25,7 @@ async def startup():
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 
-admin.add_view(UserAdmin)
+# admin.add_view(UserAdmin)
 admin.add_view(UniversityAdmin)
 
 app.include_router(auth_router)
