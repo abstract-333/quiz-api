@@ -1,6 +1,7 @@
 from sqladmin import Admin
-from admin.schemas import UserAdmin, UniversityAdmin
+from admin.schemas import UserAdmin, UniversityAdmin, AdminAuth
 from auth.router import auth_router
+from config import SECRET_KEY
 from database import engine
 from quiz.router import quiz_router
 from university.router import university_router
@@ -12,8 +13,8 @@ from fastapi import FastAPI
 app = FastAPI(
     title="Students App",
 )
-admin = Admin(app, engine)
-
+authentication_backend = AdminAuth(secret_key=SECRET_KEY)
+admin = Admin(app=app, engine=engine, authentication_backend=authentication_backend)
 
 # app.add_middleware(PyInstrumentProfilerMiddleware)
 

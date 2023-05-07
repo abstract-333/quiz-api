@@ -51,7 +51,7 @@ ADD_QUIZ_RESPONSES: OpenAPIResponseType = {
 }
 
 
-@quiz_router.post("/add", name="quiz:add quiz",dependencies=[Depends(HTTPBearer())], responses=ADD_QUIZ_RESPONSES)
+@quiz_router.post("/add", name="quiz:add quiz", dependencies=[Depends(HTTPBearer())], responses=ADD_QUIZ_RESPONSES)
 async def add_quiz(new_quiz: QuizRead, verified_user: User = Depends(current_user),
                    session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
@@ -77,7 +77,7 @@ async def add_quiz(new_quiz: QuizRead, verified_user: User = Depends(current_use
                 "details": None
                 }
     except DuplicatedQuizException:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail = ErrorCode.QUIZ_DUPLICATED)
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUIZ_DUPLICATED)
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error.")
 
