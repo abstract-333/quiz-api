@@ -3,7 +3,6 @@ from fastapi_cache.decorator import cache
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from auth.base_config import current_user
 from auth.models import university
 from database import get_async_session
 from utils.result_into_list import ResultIntoList
@@ -30,6 +29,5 @@ async def get_universities(session: AsyncSession = Depends(get_async_session)):
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
             "status": "error",
-            "data": None,
             "details": Exception
         })

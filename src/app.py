@@ -1,9 +1,10 @@
 from sqladmin import Admin
-from admin.schemas import UserAdmin, UniversityAdmin, AdminAuth
+from admin.schemas import UserAdmin, UniversityAdmin, AdminAuth, SectionAdmin, QuizAdmin, RoleAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
 from quiz.router import quiz_router
+from section.router import section_router
 from university.router import university_router
 from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
@@ -25,9 +26,13 @@ async def startup():
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 
-# admin.add_view(UserAdmin)
+admin.add_view(UserAdmin)
+admin.add_view(RoleAdmin)
+admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
+admin.add_view(QuizAdmin)
 
 app.include_router(auth_router)
 app.include_router(quiz_router)
+app.include_router(section_router)
 app.include_router(university_router)

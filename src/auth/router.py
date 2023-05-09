@@ -5,17 +5,14 @@ from auth.reset_password import reset_password_router
 from auth.schemas import UserRead, UserCreate, UserUpdate
 from auth.verify import verify_router
 
-
 auth_router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
 )
 
-
 auth_router.include_router(
     fastapi_users.get_auth_router(auth_backend, requires_verification=True),
 )
-
 auth_router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
 )
@@ -26,7 +23,6 @@ auth_router.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
     dependencies=[Depends(HTTPBearer())]
 )
-
 
 #
 # @router.post("/login")
@@ -50,14 +46,3 @@ auth_router.include_router(
 #             "data": None,
 #             "details": Exception
 #         })
-
-
-# @router.get("/secured_endpoint", dependencies=[Depends(HTTPBearer()), Depends(current_user)])
-# async def secured_endpoint():
-#     return {"message": "Hello, secured user!"}
-#
-#
-# @router.get("/example/")
-# async def secured_endpoint(token: str):
-#     return {"message": token}
-#

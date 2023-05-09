@@ -1,5 +1,8 @@
 from typing import Optional
 from fastapi_users import schemas
+from sqlalchemy import Column, String, Integer, JSON
+
+from database import Base
 
 
 class UserRead(schemas.BaseUser[int]):
@@ -38,6 +41,13 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_active: Optional[bool]
     is_superuser: Optional[bool]
     is_verified: Optional[bool]
+
+
+class Role(Base):
+    __tablename__ = "Role"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(length=25), nullable=False)
+    permissions = Column(JSON)
 
 #
 # class ExtendedOAuth2PasswordRequestForm(OAuth2PasswordRequestForm):

@@ -40,14 +40,10 @@ VERIFY_EMAIL_RESPONSE: OpenAPIResponseType = {
         "content": {
             "application/json": {
                 "examples": {ErrorCode.VERIFY_USER_BAD_TOKEN: {
-                    "summary": "Invalid verify token.",
+                    "summary": "Invalid verify token or user with this email does not exists",
                     "value": {"detail": ErrorCode.VERIFY_USER_BAD_TOKEN},
-                },
-                    ErrorCode.VERIFY_USER_BAD_TOKEN: {
-                        "summary": "Bad token, not existing user or"
-                                   "not the e-mail currently set for the user.",
-                        "value": {"detail": ErrorCode.VERIFY_USER_BAD_TOKEN},
-                    },
+                }
+                    ,
                     ErrorCode.VERIFY_USER_ALREADY_VERIFIED: {
                         "summary": "The user is already verified.",
                         "value": {

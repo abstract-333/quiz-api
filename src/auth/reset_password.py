@@ -44,12 +44,52 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {status.HTTP_400_BAD_REQUEST: {
                     "value": {"detail": ErrorCode.RESET_PASSWORD_BAD_TOKEN},
                 },
                 ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
-                    "summary": "Password validation failed.",
+                    "summary": "Password validation failed."
+                               "Password should be at least 8 characters",
                     "value": {
-                        "detail": {
-                            "code": ErrorCode.RESET_PASSWORD_INVALID_PASSWORD,
-                            "reason": "Password should be at least 8 characters",
-                        }
+                        "detail": "Password should be at least 8 characters",
+                    },
+                },
+                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
+                    "summary": "Password validation failed."
+                               "Password contain email",
+                    "value": {
+                        "detail": "Password should not contain email",
+                    },
+                },
+                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
+                    "summary": "Password validation failed."
+                               "Password don't contain uppercase character",
+                    "value": {
+                        "detail": "Password must contain at least one uppercase letter",
+                    },
+                },
+                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
+                    "summary": "Password validation failed."
+                               "Password don't contain lowercase letter",
+                    "value": {
+                        "detail": "Password must contain at least one lowercase letter",
+                    },
+                },
+                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
+                    "summary": "Password validation failed."
+                               "Password don't digit",
+                    "value": {
+                        "detail": "Password must contain at least one digit",
+                    },
+                },
+                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
+                    "summary": "Password validation failed."
+                               "Password don't contain special character"
+                    ,
+                    "value": {
+                        "detail": ("Password should be at least 8 characters",
+                                   "Password should not contain email",
+                                   "Password must contain at least one uppercase letter",
+                                   "Password must contain at least one lowercase letter",
+                                   "Password must contain at least one digit",
+                                   "Password must contain at least one special character",
+                                   ),
                     },
                 },
             }
@@ -81,7 +121,7 @@ async def forgot_password(
         return {
             "status": 202,
             "data": None,
-            "details": "Password reset token sent successfully to your email"
+            "detail": "Password reset token sent successfully to your email"
         }
     except exceptions.UserInactive:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.USER_INACTIVE)
@@ -113,9 +153,4 @@ async def reset_password(
     ):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.RESET_PASSWORD_BAD_TOKEN)
     except exceptions.InvalidPasswordException as e:
-        raise HTTPException(status_code=400, detail={
-            "status": "error",
-            "data": None,
-            "details": e.reason
-        }
-                            )
+        raise HTTPException(status_code=400, detail=e.reason)

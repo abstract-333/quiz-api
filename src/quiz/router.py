@@ -79,12 +79,20 @@ async def add_quiz(new_quiz: QuizRead, verified_user: User = Depends(current_use
     except DuplicatedQuizException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUIZ_DUPLICATED)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error.")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-# @quiz_router.get("/get/", name="quiz: patch quiz", dependencies=[Depends(HTTPBearer())])
-# async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(current_user),
+# @quiz_router.get("/get/{type}", name="quiz: get quiz", dependencies=[Depends(HTTPBearer())])
+# async def patch_quiz(type: str, verified_user: User = Depends(current_user),
 #                      session: AsyncSession = Depends(get_async_session)):
+#     try:
+#
+#
+
+
+
+
+
 
 @quiz_router.patch("/patch", name="quiz: patch quiz", dependencies=[Depends(HTTPBearer())])
 async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(current_user),

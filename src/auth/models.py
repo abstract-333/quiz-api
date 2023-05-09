@@ -7,11 +7,12 @@ from university.models import university
 
 metadata = MetaData()
 
+
 role = Table(
     "role",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("name", String(25), nullable=False),
+    Column("name", String(length=25), nullable=False),
     Column("permissions", JSON),
 )
 
