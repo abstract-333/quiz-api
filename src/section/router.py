@@ -14,7 +14,7 @@ section_router = APIRouter(
 )
 
 
-@section_router.get("/get", name="section:section get-all", dependencies=[Depends(HTTPBearer())], responses={
+@section_router.get("/get-all", name="section:section get-all", dependencies=[Depends(HTTPBearer())], responses={
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
         "description": "Internal sever error.",
     },
