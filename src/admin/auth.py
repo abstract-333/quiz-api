@@ -10,7 +10,6 @@ from auth.base_config import current_user
 from auth.models import User
 
 
-
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request, dependencies=[Depends(HTTPBearer())],
                     verified_user: User = Depends(current_user)) -> bool:

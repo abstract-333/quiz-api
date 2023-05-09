@@ -1,5 +1,7 @@
 from sqladmin import Admin
-from admin.schemas import UserAdmin, UniversityAdmin, AdminAuth, SectionAdmin, QuizAdmin, RoleAdmin
+
+from admin.auth import AdminAuth
+from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, QuizAdmin, RoleAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
