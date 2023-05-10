@@ -7,6 +7,11 @@ class DuplicatedQuizException(Exception):
     pass
 
 
+class UserNotAdminSupervisor(Exception):
+    """USER_NOT_ADMIN_SUPERVISOR"""
+    pass
+
+
 USER_NOT_EXISTS_HTTP_EXCEPTION = HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={
     "status": "error",
     "data": None,
