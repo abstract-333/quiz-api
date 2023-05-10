@@ -1,11 +1,11 @@
 from sqladmin import Admin
 
 from admin.auth import AdminAuth
-from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, QuizAdmin, RoleAdmin
+from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, QuestionAdmin, RoleAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
-from quiz.router import quiz_router
+from question.router import question_router
 from section.router import section_router
 from university.router import university_router
 from redis import asyncio as aioredis
@@ -14,7 +14,7 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi import FastAPI
 
 app = FastAPI(
-    title="Students App",
+    title="Quiz App",
 )
 authentication_backend = AdminAuth(secret_key=SECRET_KEY)
 admin = Admin(app=app, engine=engine, authentication_backend=authentication_backend)
@@ -32,9 +32,9 @@ admin.add_view(UserAdmin)
 admin.add_view(RoleAdmin)
 admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
-admin.add_view(QuizAdmin)
+admin.add_view(QuestionAdmin)
 
 app.include_router(auth_router)
-app.include_router(quiz_router)
+app.include_router(question_router)
 app.include_router(section_router)
 app.include_router(university_router)

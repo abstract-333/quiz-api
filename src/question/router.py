@@ -9,15 +9,15 @@ from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
-from quiz.models import quiz
-from quiz.schemas import QuizCreate, QuizRead
+from question.models import question
+from question.schemas import QuizCreate, QuizRead
 from utils.custom_exceptions import DuplicatedQuizException
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
 
-quiz_router = APIRouter(
-    prefix="/quiz",
-    tags=["Quiz"],
+question_router = APIRouter(
+    prefix="/question",
+    tags=["Question"],
 )
 
 ADD_QUIZ_RESPONSES: OpenAPIResponseType = {
@@ -51,30 +51,31 @@ ADD_QUIZ_RESPONSES: OpenAPIResponseType = {
 }
 
 
-@quiz_router.post("/add", name="quiz:add quiz", dependencies=[Depends(HTTPBearer())], responses=ADD_QUIZ_RESPONSES)
-async def add_quiz(new_quiz: QuizRead, verified_user: User = Depends(current_user),
-                   session: AsyncSession = Depends(get_async_session)) -> dict:
+@question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
+                      responses=ADD_QUIZ_RESPONSES)
+async def add_question(new_quiz: QuizRead, verified_user: User = Depends(current_user),
+                       session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
         if verified_user.role_id == 1:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
-        query = select(quiz).where(quiz.c.question == new_quiz.question)
+        query = select(question).where(question.c.question_title == new_quiz.question_title)
         result_proxy = await session.execute(query)
         result = ResultIntoList(result_proxy=result_proxy).parse()  # converting result to list
         for element in result:
             if Counter(element["choices"]) == Counter(new_quiz.choices):  # checking if duplicated
                 raise DuplicatedQuizException
         quiz_create = QuizCreate(resolve_time=new_quiz.resolve_time,
-                                 question=new_quiz.question,
+                                 question_title=new_quiz.question_title,
                                  choices=new_quiz.choices,
                                  answer=new_quiz.answer,
                                  added_by=verified_user.username,
-                                 type=new_quiz.type)
-        stmt = insert(quiz).values(**quiz_create.dict())
+                                 section_id=new_quiz.section_id)
+        stmt = insert(question).values(**quiz_create.dict())
         await session.execute(stmt)
         await session.commit()
         return {"status": "success",
                 "data": quiz_create,
-                "details": None
+                "detail": None
                 }
     except DuplicatedQuizException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUIZ_DUPLICATED)
@@ -82,21 +83,27 @@ async def add_quiz(new_quiz: QuizRead, verified_user: User = Depends(current_use
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-# @quiz_router.get("/get/{type}", name="quiz: get quiz", dependencies=[Depends(HTTPBearer())])
-# async def patch_quiz(type: str, verified_user: User = Depends(current_user),
-#                      session: AsyncSession = Depends(get_async_session)):
-#     try:
-#
-#
+@question_router.get("/get/{section_id}", name="question: get question", dependencies=[Depends(HTTPBearer())], responses={
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    },
+}
+                     )
+async def patch_question(section_id: int, offset: int = 0, session: AsyncSession = Depends(get_async_session), ):
+    try:
+        query = select(question).where(question.c.section_id == section_id).offset(offset).limit(10)
+        result_proxy = await session.execute(query)
+        result = ResultIntoList(result_proxy=result_proxy).parse()
+        return {"status": "success",
+                "data": result,
+                "detail": None}
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-
-
-
-
-@quiz_router.patch("/patch", name="quiz: patch quiz", dependencies=[Depends(HTTPBearer())])
-async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(current_user),
-                     session: AsyncSession = Depends(get_async_session)):
+@question_router.patch("/patch", name="question: patch question", dependencies=[Depends(HTTPBearer())])
+async def patch_question(edited_quiz: QuizRead, verified_user: User = Depends(current_user),
+                         session: AsyncSession = Depends(get_async_session)):
     try:
         if verified_user.role_id == 1:
             raise HTTPException(status_code=405, detail={
@@ -104,7 +111,7 @@ async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(curren
                 "data": None,
                 "details": "Students can't edit(patch) quizzes"
             })
-        query = select(quiz).where(quiz.c.question == edited_quiz.question)
+        query = select(question).where(question.c.question == edited_quiz.question)
         result_proxy = await session.execute(query)
         result = ResultIntoList(result_proxy=result_proxy).parse()
         for element in result:
@@ -113,7 +120,7 @@ async def patch_quiz(edited_quiz: QuizRead, verified_user: User = Depends(curren
                 [Counter(edited_quiz.choices), edited_quiz.resolve_time, edited_quiz.answer, edited_quiz.answer,
                  edited_quiz.type]):
                 raise DuplicatedQuizException
-        stmt = update(quiz).valaues(**edited_quiz.dict()).where(quiz.c.id == result[0]["id"])
+        stmt = update(question).valaues(**edited_quiz.dict()).where(question.c.id == result[0]["id"])
         await session.execute(stmt)
         await session.commit()
         return {"status": "success",

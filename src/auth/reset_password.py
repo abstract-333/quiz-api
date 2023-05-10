@@ -45,42 +45,6 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {status.HTTP_400_BAD_REQUEST: {
                 },
                 ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
                     "summary": "Password validation failed."
-                               "Password should be at least 8 characters",
-                    "value": {
-                        "detail": "Password should be at least 8 characters",
-                    },
-                },
-                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
-                    "summary": "Password validation failed."
-                               "Password contain email",
-                    "value": {
-                        "detail": "Password should not contain email",
-                    },
-                },
-                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
-                    "summary": "Password validation failed."
-                               "Password don't contain uppercase character",
-                    "value": {
-                        "detail": "Password must contain at least one uppercase letter",
-                    },
-                },
-                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
-                    "summary": "Password validation failed."
-                               "Password don't contain lowercase letter",
-                    "value": {
-                        "detail": "Password must contain at least one lowercase letter",
-                    },
-                },
-                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
-                    "summary": "Password validation failed."
-                               "Password don't digit",
-                    "value": {
-                        "detail": "Password must contain at least one digit",
-                    },
-                },
-                ErrorCode.RESET_PASSWORD_INVALID_PASSWORD: {
-                    "summary": "Password validation failed."
-                               "Password don't contain special character"
                     ,
                     "value": {
                         "detail": ("Password should be at least 8 characters",

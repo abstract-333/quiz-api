@@ -3,7 +3,7 @@ from sqladmin import ModelView
 
 from auth.models import User
 from auth.schemas import Role
-from quiz.schemas import Quiz
+from question.schemas import Question
 from section.schemas import Section
 from university.schames import University
 
@@ -44,12 +44,13 @@ class RoleAdmin(ModelView, model=Role):
     can_view_details = True
 
 
-class QuizAdmin(ModelView, model=Quiz):
-    name = "Quiz"
-    name_plural = "Quizzes"
-    column_list = [Quiz.id, Quiz.resolve_time, Quiz.question, Quiz.choices, Quiz.answer, Quiz.added_by, Quiz.added_at]
+class QuestionAdmin(ModelView, model=Question):
+    name = "Question"
+    name_plural = "Questions"
+    column_list = [Question.id, Question.resolve_time, Question.question_title, Question.choices, Question.answer, Question.added_by, Question.added_at, Question.section_id]
     can_edit = True
     can_delete = False
+    can_create = True
     can_view_details = True
 
 
