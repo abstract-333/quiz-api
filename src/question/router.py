@@ -9,9 +9,8 @@ from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
-from question.models import question
+from question.models import QUESTIONS_SECTIONS
 from question.schemas import QuizCreate, QuizRead
-from section.models import section
 from utils.custom_exceptions import DuplicatedQuizException, UserNotAdminSupervisor
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
@@ -78,7 +77,8 @@ async def add_question(new_quiz: QuizRead, verified_user: User = Depends(current
     try:
         if verified_user.role_id == 1:
             raise UserNotAdminSupervisor
-        query = select(question).where(question.c.question_title == new_quiz.question_title)
+        table = QUESTIONS_SECTIONS[verified_user.section_id-1]
+        query = select(table).where(table.c.question_title == new_quiz.question_title)
         result_proxy = await session.execute(query)
         result = ResultIntoList(result_proxy=result_proxy).parse()  # converting result to list
         for element in result:
@@ -89,8 +89,8 @@ async def add_question(new_quiz: QuizRead, verified_user: User = Depends(current
                                  choices=new_quiz.choices,
                                  answer=new_quiz.answer,
                                  added_by=verified_user.username,
-                                 section_id=new_quiz.section_id)
-        stmt = insert(question).values(**quiz_create.dict())
+                                 )
+        stmt = insert(table).values(**quiz_create.dict())
         await session.execute(stmt)
         await session.commit()
         return {"status": "success",
@@ -110,7 +110,8 @@ async def add_question(new_quiz: QuizRead, verified_user: User = Depends(current
 async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_async_session),
                           verified_user: User = Depends(current_user)) -> dict:
     try:
-        query = select(question).where(question.c.added_by == verified_user.username).offset(offset).limit(10)
+        table = QUESTIONS_SECTIONS[verified_user.section_id-1]
+        query = select(table).where(table.c.added_by == verified_user.username).offset(offset).limit(10)
         result_proxy = await session.execute(query)
         result = ResultIntoList(result_proxy=result_proxy).parse()
         return {"status": "success",
@@ -125,9 +126,8 @@ async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_a
 async def get_question_section_id(section_id: int, offset: int = 0,
                                   session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
-        section_name_query = select(section.name).where(section.c.id == section_id)
-        section_name = await session.execute(section_name_query)
-        question_list_query = select(section_name).where(question.c.section_id == section_id).offset(offset).limit(10)
+        table = QUESTIONS_SECTIONS[section_id - 1]
+        question_list_query = select(table).offset(offset).limit(10)
         result_proxy = await session.execute(question_list_query)
         result = ResultIntoList(result_proxy=result_proxy).parse()
         return {"status": "success",

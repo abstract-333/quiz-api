@@ -10,7 +10,6 @@ class QuizRead(BaseModel):
     question_title: str
     choices: list
     answer: str
-    section_id: int
 
 
 class QuizCreate(BaseModel):
@@ -19,7 +18,6 @@ class QuizCreate(BaseModel):
     choices: list
     answer: str
     added_by: str
-    section_id: int
 
 
 class Question(Base):

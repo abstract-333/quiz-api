@@ -3,6 +3,7 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import MetaData, Table, Column, Integer, String, TIMESTAMP, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from database import Base
+from section.models import section
 from university.models import university
 
 metadata = MetaData()
@@ -24,6 +25,7 @@ user = Table(
     Column("username", String(length=25), nullable=False),
     Column("role_id", Integer, ForeignKey(role.c.id)),
     Column("university_id", Integer, ForeignKey(university.c.id), nullable=True),
+    Column("section_id", Integer, ForeignKey(section.c.id), nullable=True),
     Column("phone", String(length=10), nullable=True),
     Column("registered_at", TIMESTAMP, default=datetime.utcnow),
     Column("hashed_password", String(length=128), nullable=False),
@@ -39,6 +41,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     username = Column(String(length=25), nullable=False)
     role_id = Column(Integer, ForeignKey(role.c.id))
     university_id = Column(Integer, ForeignKey(university.c.id), nullable=True)
+    section_id = Column(Integer, ForeignKey(section.c.id), nullable=True)
     phone = Column(String(length=10), nullable=True)
     registered_at = Column(TIMESTAMP, default=datetime.utcnow())
     hashed_password: Mapped[str] = mapped_column(String(length=128), nullable=False)

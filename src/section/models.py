@@ -7,5 +7,5 @@ section = Table(
     "section",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("name", String(length=25), nullable=False, unique=True)
+    Column("name", String(length=25), nullable=False)
 )

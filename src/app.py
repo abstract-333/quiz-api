@@ -32,7 +32,7 @@ admin.add_view(UserAdmin)
 admin.add_view(RoleAdmin)
 admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
-admin.add_view(QuestionAdmin)
+# admin.add_view(QuestionAdmin)
 
 app.include_router(auth_router)
 app.include_router(question_router)

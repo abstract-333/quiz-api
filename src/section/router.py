@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -14,14 +13,14 @@ section_router = APIRouter(
 )
 
 
-@section_router.get("/get-all", name="section:section get-all", dependencies=[Depends(HTTPBearer())], responses={
+@section_router.get("/get-all", name="section:section get-all", responses={
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
         "description": "Internal sever error.",
     },
 
 })
 @cache(expire=3600 * 24)
-async def add_quiz(session: AsyncSession = Depends(get_async_session)) -> dict:
+async def get_sections(session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
         query = select(section)
         result_proxy = await session.execute(query)
