@@ -11,16 +11,13 @@ from utils.error_code import ErrorCode
 reset_password_router = APIRouter()
 
 FORGET_PASSWORD_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
+    status.HTTP_404_NOT_FOUND: {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.USER_NOT_EXISTS: {
-                    "summary": "User not exists with this email",
-                    "value": {"detail": ErrorCode.USER_NOT_EXISTS},
-                }, ErrorCode.USER_INACTIVE: {
-                    "summary": "User inactive",
-                    "value": {"detail": ErrorCode.USER_INACTIVE},
+                "examples": {"USER_INACTIVE_OR_NOT_EXISTS": {
+                    "summary": "User inactive or not exists",
+                    "value": {"detail": "USER_INACTIVE_OR_NOT_EXISTS"},
                 },
                 }
             }
@@ -28,7 +25,7 @@ FORGET_PASSWORD_RESPONSES: OpenAPIResponseType = {
     },
 }
 
-RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {status.HTTP_400_BAD_REQUEST: {
+RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {status.HTTP_401_UNAUTHORIZED: {
     "model": ErrorModel,
     "content": {
         "application/json": {
@@ -65,30 +62,29 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {status.HTTP_400_BAD_REQUEST: {
 
 @reset_password_router.post(
     "/forgot-password",
-    status_code=status.HTTP_202_ACCEPTED,
     name="reset:forgot_password",
+    status_code=202,
     responses=FORGET_PASSWORD_RESPONSES
 
 )
 async def forgot_password(
         request: Request,
+
         email: EmailStr = Body(..., embed=True),
         user_manager: BaseUserManager = Depends(get_user_manager)
 ):
     try:
         user = await user_manager.get_by_email(email)
-    except exceptions.UserNotExists:
-        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.USER_NOT_EXISTS)
-
-    try:
         await user_manager.forgot_password(user, request)
         return {
-            "status": 202,
+            "status": "success",
             "data": None,
             "detail": "Password reset token sent successfully to your email"
         }
-    except exceptions.UserInactive:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.USER_INACTIVE)
+    except (exceptions.UserInactive, exceptions.UserNotExists):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.USER_INACTIVE_OR_NOT_EXISTS)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
 @reset_password_router.post(
@@ -105,16 +101,17 @@ async def reset_password(
     try:
         await user_manager.reset_password(token, password, request)
         return {
-            "status": 200,
+            "status": "success",
             "data": None,
             "details": "Password reset successfully"
         }
-
     except (
             exceptions.InvalidResetPasswordToken,
             exceptions.UserNotExists,
             exceptions.UserInactive,
     ):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.RESET_PASSWORD_BAD_TOKEN)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=ErrorCode.RESET_PASSWORD_BAD_TOKEN)
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(status_code=400, detail=e.reason)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
