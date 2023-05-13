@@ -1,3 +1,4 @@
+import itertools
 from collections import Counter
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
@@ -81,7 +82,8 @@ async def add_question(new_quiz: QuestionRead, verified_user: User = Depends(cur
         table = QUESTIONS_SECTIONS[verified_user.section_id-1]
         query = select(table).where(table.c.question_title == new_quiz.question_title)
         result_proxy = await session.execute(query)
-        result = ResultIntoList(result_proxy=result_proxy).parse()  # converting result to list
+        result = ResultIntoList(result_proxy=result_proxy)
+        result = list(itertools.chain(result.parse()))  # converting result to list
         for element in result:
             # checking if duplicated
             if Counter(element["choices"], element["question_title"]) == Counter(new_quiz.choices, new_quiz.question_title):
@@ -115,7 +117,8 @@ async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_a
         table = QUESTIONS_SECTIONS[verified_user.section_id-1]
         query = select(table).where(table.c.added_by == verified_user.username).offset(offset).limit(10)
         result_proxy = await session.execute(query)
-        result = ResultIntoList(result_proxy=result_proxy).parse()
+        result = ResultIntoList(result_proxy=result_proxy)
+        result = list(itertools.chain(result.parse()))
         return {"status": "success",
                 "data": result,
                 "detail": None}
@@ -131,7 +134,8 @@ async def get_question_section_id(section_id: int, offset: int = 0,
         table = QUESTIONS_SECTIONS[section_id - 1]
         question_list_query = select(table).offset(offset).limit(10)
         result_proxy = await session.execute(question_list_query)
-        result = ResultIntoList(result_proxy=result_proxy).parse()
+        result = ResultIntoList(result_proxy=result_proxy)
+        result = list(itertools.chain(result.parse()))
         return {"status": "success",
                 "data": result,
                 "detail": None}
