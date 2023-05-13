@@ -8,5 +8,5 @@ class ResultIntoList:
     def parse(self):
         result = []
         for row in self.result_proxy:
-            result.append(row._asdict())
-        return result
+            yield row._asdict()
+        # return result

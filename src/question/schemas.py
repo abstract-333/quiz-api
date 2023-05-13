@@ -5,14 +5,14 @@ from database import Base
 from section.models import section
 
 
-class QuizRead(BaseModel):
+class QuestionRead(BaseModel):
     resolve_time: int
     question_title: str
     choices: list
     answer: str
 
 
-class QuizCreate(BaseModel):
+class QuestionCreate(BaseModel):
     resolve_time: int
     question_title: str
     choices: list

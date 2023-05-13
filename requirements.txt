@@ -93,3 +93,4 @@ websockets
 gunicorn
 fastapi_profiler
 sqladmin
+numpy

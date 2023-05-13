@@ -1,11 +1,11 @@
 from sqladmin import Admin
-
 from admin.auth import AdminAuth
-from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, QuestionAdmin, RoleAdmin
+from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
 from question.router import question_router
+from quiz.router import quiz_router
 from section.router import section_router
 from university.router import university_router
 from redis import asyncio as aioredis
@@ -26,6 +26,7 @@ admin = Admin(app=app, engine=engine, authentication_backend=authentication_back
 async def startup():
     redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    app.state.selected_questions_id = set()
 
 
 admin.add_view(UserAdmin)
@@ -38,3 +39,4 @@ app.include_router(auth_router)
 app.include_router(question_router)
 app.include_router(section_router)
 app.include_router(university_router)
+app.include_router(quiz_router)

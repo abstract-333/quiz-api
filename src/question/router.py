@@ -10,7 +10,7 @@ from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
 from question.models import QUESTIONS_SECTIONS
-from question.schemas import QuizCreate, QuizRead
+from question.schemas import QuestionCreate, QuestionRead
 from utils.custom_exceptions import DuplicatedQuizException, UserNotAdminSupervisor
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
@@ -72,24 +72,26 @@ GET_QUESTION_RESPONSES: OpenAPIResponseType = {
 
 @question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
                       responses=ADD_QUESTION_RESPONSES)
-async def add_question(new_quiz: QuizRead, verified_user: User = Depends(current_user),
+async def add_question(new_quiz: QuestionRead, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
         if verified_user.role_id == 1:
             raise UserNotAdminSupervisor
+
         table = QUESTIONS_SECTIONS[verified_user.section_id-1]
         query = select(table).where(table.c.question_title == new_quiz.question_title)
         result_proxy = await session.execute(query)
         result = ResultIntoList(result_proxy=result_proxy).parse()  # converting result to list
         for element in result:
-            if Counter(element["choices"]) == Counter(new_quiz.choices):  # checking if duplicated
+            # checking if duplicated
+            if Counter(element["choices"], element["question_title"]) == Counter(new_quiz.choices, new_quiz.question_title):
                 raise DuplicatedQuizException
-        quiz_create = QuizCreate(resolve_time=new_quiz.resolve_time,
-                                 question_title=new_quiz.question_title,
-                                 choices=new_quiz.choices,
-                                 answer=new_quiz.answer,
-                                 added_by=verified_user.username,
-                                 )
+        quiz_create = QuestionCreate(resolve_time=new_quiz.resolve_time,
+                                     question_title=new_quiz.question_title,
+                                     choices=new_quiz.choices,
+                                     answer=new_quiz.answer,
+                                     added_by=verified_user.username,
+                                     )
         stmt = insert(table).values(**quiz_create.dict())
         await session.execute(stmt)
         await session.commit()
@@ -105,7 +107,7 @@ async def add_question(new_quiz: QuizRead, verified_user: User = Depends(current
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.get("/get/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer())],
+@question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_RESPONSES)
 async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_async_session),
                           verified_user: User = Depends(current_user)) -> dict:
@@ -121,7 +123,7 @@ async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_a
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.get("/get/{section_id}", name="question:get question", dependencies=[Depends(HTTPBearer())],
+@question_router.get("/{section_id}", name="question:get question", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_RESPONSES)
 async def get_question_section_id(section_id: int, offset: int = 0,
                                   session: AsyncSession = Depends(get_async_session)) -> dict:
@@ -135,6 +137,7 @@ async def get_question_section_id(section_id: int, offset: int = 0,
                 "detail": None}
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
 
 # @question_router.patch("/patch", name="question: patch question", dependencies=[Depends(HTTPBearer())])
 # async def patch_question(edited_quiz: QuizRead, verified_user: User = Depends(current_user),
