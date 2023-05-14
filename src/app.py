@@ -1,6 +1,7 @@
 from sqladmin import Admin
 from admin.auth import AdminAuth
-from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin
+from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, SoftwareQuestionAdmin, \
+    NetworkQuestionAdmin, AIQuestionAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
@@ -33,7 +34,9 @@ admin.add_view(UserAdmin)
 admin.add_view(RoleAdmin)
 admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
-# admin.add_view(QuestionAdmin)
+admin.add_view(SoftwareQuestionAdmin)
+admin.add_view(NetworkQuestionAdmin)
+admin.add_view(AIQuestionAdmin)
 
 app.include_router(auth_router)
 app.include_router(question_router)

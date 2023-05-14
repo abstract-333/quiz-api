@@ -3,6 +3,8 @@ import itertools
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_cache.decorator import cache
+from fastapi_users.openapi import OpenAPIResponseType
+from fastapi_users.router.common import ErrorModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
@@ -12,6 +14,7 @@ from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
 from question.models import QUESTIONS_SECTIONS
+from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
 
 quiz_router = APIRouter(
@@ -19,9 +22,26 @@ quiz_router = APIRouter(
     tags=["Quiz"]
 )
 
+GET_QUIZ_RESPONSES: OpenAPIResponseType = {
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
+                    "summary": "Not authenticated",
+                    "value": {"detail": "Not authenticated"},
+                }}
+            },
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
+}
+
 
 # @cache(expire=60 * 10)
-@quiz_router.get("/get", name="question:get question", )
+@quiz_router.get("/get", name="question:get question", responses=GET_QUIZ_RESPONSES)
 async def get_quiz(session: AsyncSession = Depends(get_async_session)):
     try:
         software_table = QUESTIONS_SECTIONS[0]
