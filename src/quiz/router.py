@@ -40,7 +40,7 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
 
 # @cache(expire=60 * 10)
 @quiz_router.get("/get", name="quiz:get quiz", dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
-async def get_quiz(session: AsyncSession = Depends(get_async_session)):
+async def get_quiz(session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
         software_table = QUESTIONS_SECTIONS[0]
         network_table = QUESTIONS_SECTIONS[1]

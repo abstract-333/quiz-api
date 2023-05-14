@@ -150,10 +150,11 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
                 raise DuplicatedQuestionException
         question_create = QuestionCreate(resolve_time=added_question.resolve_time,
                                          question_title=added_question.question_title,
-                                         choices=list(added_question.choices),
+                                         choices=list(added_question.choices),  # converting set to list
                                          answer=added_question.answer,
                                          added_by=verified_user.username,
                                          )
+
         stmt = insert(table).values(**question_create.dict())
         await session.execute(stmt)
         await session.commit()
@@ -165,12 +166,16 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
 
     except UserNotAdminSupervisor:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+
     except NumberOfChoicesNotFour:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR)
+
     except AnswerNotIncluded:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
+
     except DuplicatedQuestionException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUIZ_DUPLICATED)
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
@@ -190,6 +195,7 @@ async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_a
         return {"status": "success",
                 "data": result,
                 "detail": None}
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
@@ -214,6 +220,7 @@ async def get_question_section_id(section_id: int, offset: int = 0,
                 "detail": None}
     except OutOfSectionIdException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.OUT_OF_SECTION_ID)
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
@@ -221,7 +228,7 @@ async def get_question_section_id(section_id: int, offset: int = 0,
 @question_router.patch("/patch", name="question: patch question", dependencies=[Depends(HTTPBearer())],
                        responses=ADD_PATCH_QUESTION_RESPONSES)
 async def patch_question(question_id: int, edited_question: QuestionRead, verified_user: User = Depends(current_user),
-                         session: AsyncSession = Depends(get_async_session)):
+                         session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
         table = QUESTIONS_SECTIONS[verified_user.section_id - 1]
 
@@ -261,6 +268,7 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                                          answer=edited_question.answer,
                                          added_by=verified_user.username,
                                          )
+
         stmt = update(table).values(**question_update.dict()).where(table.c.id == question_id)
         await session.execute(stmt)
         await session.commit()
@@ -272,11 +280,15 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
     except UserNotAdminSupervisor:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+
     except NumberOfChoicesNotFour:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR)
+
     except AnswerNotIncluded:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
+
     except DuplicatedQuestionException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUIZ_DUPLICATED)
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
