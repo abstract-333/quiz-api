@@ -1,5 +1,4 @@
 import itertools
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_cache.decorator import cache
@@ -9,7 +8,6 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
 from starlette import status
-
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
@@ -41,7 +39,7 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
 
 
 # @cache(expire=60 * 10)
-@quiz_router.get("/get", name="question:get question", responses=GET_QUIZ_RESPONSES)
+@quiz_router.get("/get", name="quiz:get quiz", dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
 async def get_quiz(session: AsyncSession = Depends(get_async_session)):
     try:
         software_table = QUESTIONS_SECTIONS[0]
