@@ -41,3 +41,18 @@ class RatingException(Exception):
 class DuplicatedTitle(Exception):
     """DUPLICATED_TITLE"""
     pass
+
+
+class InvalidPage(Exception):
+    """INVALID_PAGINATION"""
+    pass
+
+
+class FeedbackNotExists(Exception):
+    """FEEDBACK_NOT_EXISTS"""
+    pass
+
+
+class FeedbackNotEditable(Exception):
+    """FEEDBACK_NOT_EDITABLE_NOW"""
+    pass

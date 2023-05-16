@@ -12,6 +12,7 @@ from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
 from question.models import question
+from utils.custom_exceptions import InvalidPage
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
 
@@ -21,6 +22,19 @@ quiz_router = APIRouter(
 )
 
 GET_QUIZ_RESPONSES: OpenAPIResponseType = {
+    status.HTTP_400_BAD_REQUEST: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.INVALID_PAGE: {
+                        "summary": "Invalid page",
+                        "value": {"detail": ErrorCode.INVALID_PAGE},
+                    }
+                }
+            },
+        },
+    },
     status.HTTP_403_FORBIDDEN: {
         "model": ErrorModel,
         "content": {
@@ -42,12 +56,17 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
 @quiz_router.get("/get", name="quiz:get quiz", dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
 async def get_quiz(number_questions: int = 50, session: AsyncSession = Depends(get_async_session)):
     try:
+        if number_questions not in range(10, 51):
+            raise InvalidPage
+
         number_software_questions = number_questions * 0.6
         number_network_questions = number_questions * 0.2
         number_ai_questions = number_questions * 0.2
 
-        software_query = select(question).where(question.c.section_id == 1).order_by(func.random()).limit(number_software_questions)
-        network_query = select(question).where(question.c.section_id == 2).order_by(func.random()).limit(number_network_questions)
+        software_query = select(question).where(question.c.section_id == 1).order_by(func.random()).limit(
+            number_software_questions)
+        network_query = select(question).where(question.c.section_id == 2).order_by(func.random()).limit(
+            number_network_questions)
         ai_query = select(question).where(question.c.section_id == 3).order_by(func.random()).limit(number_ai_questions)
 
         software = await session.execute(software_query)
@@ -66,6 +85,9 @@ async def get_quiz(number_questions: int = 50, session: AsyncSession = Depends(g
                 "data": result,
                 "details": None
                 }
+
+    except InvalidPage:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.INVALID_PAGE)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

@@ -14,3 +14,9 @@ class FeedbackCreate(BaseModel):
     feedback_title: str
     user_id: int
     question_id: int
+    question_author_id: int
+
+
+class FeedbackUpdate(BaseModel):
+    rating: int
+    feedback_title: str
