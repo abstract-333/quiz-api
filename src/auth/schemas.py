@@ -46,6 +46,11 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_verified: Optional[bool]
 
 
+# class StudentCreate(BaseModel):
+#     id: int
+#     number_solved: Optional[int]
+
+
 class Role(Base):
     __tablename__ = "Role"
     id = Column(Integer, primary_key=True)

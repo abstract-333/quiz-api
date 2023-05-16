@@ -8,10 +8,11 @@ import os
 sys.path.append(os.path.join(sys.path[0], "src"))
 
 from src.config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
+from src.section.models import metadata as metadata_section
+from src.university.models import metadata as metadata_university
 from src.auth.models import metadata as metadata_auth
 from src.question.models import metadata as metadata_question
-from src.university.models import metadata as metadata_university
-from src.section.models import metadata as metadata_section
+from src.feedback.models import metadata as metadata_feedback
 
 config = context.config
 
@@ -30,7 +31,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question]
+target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question, metadata_feedback]
 
 
 # other values from the config, defined by the needs of env.py,

@@ -3,12 +3,13 @@ from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas, jwt
 from fastapi_users.jwt import decode_jwt
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import HTMLResponse
 from auth.models import User
 from auth.schemas import UserCreate
 from config import SECRET_KEY
-from database import get_async_session
+from database import get_async_session, async_session_maker
 from utils.password_manager import PasswordManager
 from utils.constants import Constants
 from utils.email import send_email
@@ -122,7 +123,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_register(
             self, user: models.UP, request: Optional[Request] = None
     ) -> None:
-        await self.request_verify(user, request)
+        # await self.request_verify(user, request)
         return None
 
     async def create(
@@ -130,6 +131,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             user_create: schemas.UC,
             safe: bool = False,
             request: Optional[Request] = None,
+            # session: AsyncSession = Depends(get_async_session)
     ) -> models.UP:
 
         await self.validate_password(user_create.password, user_create)
@@ -155,6 +157,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             user_dict["role_id"] = 1
 
         created_user = await self.user_db.create(user_dict)
+
         await self.on_after_register(created_user, request)
         delattr(created_user, "hashed_password")
 

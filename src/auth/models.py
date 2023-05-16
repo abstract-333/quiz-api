@@ -8,7 +8,6 @@ from university.models import university
 
 metadata = MetaData()
 
-
 role = Table(
     "role",
     metadata,
@@ -36,13 +35,14 @@ user = Table(
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True)
     email = Column(String(length=50), nullable=False, index=True)
     username = Column(String(length=25), nullable=False)
     role_id = Column(Integer, ForeignKey(role.c.id))
-    university_id = Column(Integer, ForeignKey(university.c.id), nullable=True)
     section_id = Column(Integer, ForeignKey(section.c.id), nullable=True)
     phone = Column(String(length=10), nullable=True)
+    university_id = Column(Integer, ForeignKey(university.c.id), nullable=True)
     registered_at = Column(TIMESTAMP, default=datetime.utcnow())
     hashed_password: Mapped[str] = mapped_column(String(length=128), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

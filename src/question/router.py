@@ -10,7 +10,7 @@ from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
-from question.models import QUESTIONS_SECTIONS
+from question.models import question
 from question.schemas import QuestionCreate, QuestionRead
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour
@@ -57,9 +57,9 @@ ADD_PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.QUIZ_DUPLICATED: {
+                "examples": {ErrorCode.QUESTION_DUPLICATED: {
                     "summary": "Quiz duplicated, you've entered same question with same choices and answer",
-                    "value": {"detail": ErrorCode.QUIZ_DUPLICATED},
+                    "value": {"detail": ErrorCode.QUESTION_DUPLICATED},
                 }
                 }
             }
@@ -136,8 +136,7 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
     try:
         await checking_question_validity(added_question, verified_user)
 
-        table = QUESTIONS_SECTIONS[verified_user.section_id - 1]
-        query = select(table).where(table.c.question_title == added_question.question_title)
+        query = select(question).where(question.c.question_title == added_question.question_title)
         result_proxy = await session.execute(query)
 
         result = ResultIntoList(result_proxy=result_proxy)
@@ -152,10 +151,11 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
                                          question_title=added_question.question_title,
                                          choices=list(added_question.choices),  # converting set to list
                                          answer=added_question.answer,
-                                         added_by=verified_user.username,
+                                         added_by=verified_user.id,
+                                         section_id=verified_user.section_id
                                          )
 
-        stmt = insert(table).values(**question_create.dict())
+        stmt = insert(question).values(**question_create.dict())
         await session.execute(stmt)
         await session.commit()
 
@@ -174,7 +174,7 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
 
     except DuplicatedQuestionException:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUIZ_DUPLICATED)
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -182,11 +182,10 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
 
 @question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_RESPONSES)
-async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_async_session),
+async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_async_session),
                           verified_user: User = Depends(current_user)) -> dict:
     try:
-        table = QUESTIONS_SECTIONS[verified_user.section_id - 1]
-        query = select(table).where(table.c.added_by == verified_user.username).offset(offset).limit(10)
+        query = select(question).where(question.c.added_by == verified_user.id).offset(page-1).limit(10)
 
         result_proxy = await session.execute(query)
         result = ResultIntoList(result_proxy=result_proxy)
@@ -200,7 +199,7 @@ async def get_question_me(offset: int = 0, session: AsyncSession = Depends(get_a
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.get("/{section_id}", name="question:get question", dependencies=[Depends(HTTPBearer())],
+@question_router.get("/get", name="question:get question", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_SECTION_RESPONSES)
 async def get_question_section_id(section_id: int, offset: int = 0,
                                   session: AsyncSession = Depends(get_async_session)) -> dict:
@@ -208,8 +207,7 @@ async def get_question_section_id(section_id: int, offset: int = 0,
         if section_id not in (1, 2, 3):
             raise OutOfSectionIdException
 
-        table = QUESTIONS_SECTIONS[section_id - 1]
-        question_list_query = select(table).offset(offset).limit(10)
+        question_list_query = select(question).where(question.c.section_id == section_id).offset(offset).limit(10)
         result_proxy = await session.execute(question_list_query)
 
         result = ResultIntoList(result_proxy=result_proxy)
@@ -230,11 +228,10 @@ async def get_question_section_id(section_id: int, offset: int = 0,
 async def patch_question(question_id: int, edited_question: QuestionRead, verified_user: User = Depends(current_user),
                          session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
-        table = QUESTIONS_SECTIONS[verified_user.section_id - 1]
 
         await checking_question_validity(edited_question, verified_user)
 
-        query = select(table).where(table.c.id == question_id)
+        query = select(question).where(question.c.id == question_id)
         result_proxy = await session.execute(query)
 
         result = ResultIntoList(result_proxy=result_proxy)
@@ -249,8 +246,8 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                         "details": None
                         }
 
-        query = select(table).where(table.c.question_title == edited_question.question_title and
-                                    table.c.id != question_id)
+        query = select(question).where(question.c.question_title == edited_question.question_title and
+                                    question.c.id != question_id)
         result_proxy = await session.execute(query)
 
         result = ResultIntoList(result_proxy=result_proxy)
@@ -266,10 +263,11 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                                          question_title=edited_question.question_title,
                                          choices=list(edited_question.choices),
                                          answer=edited_question.answer,
-                                         added_by=verified_user.username,
+                                         added_by=verified_user.id,
+                                         section_id=verified_user.section_id
                                          )
 
-        stmt = update(table).values(**question_update.dict()).where(table.c.id == question_id)
+        stmt = update(question).values(**question_update.dict()).where(question.c.id == question_id)
         await session.execute(stmt)
         await session.commit()
 
@@ -288,7 +286,7 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
 
     except DuplicatedQuestionException:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUIZ_DUPLICATED)
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

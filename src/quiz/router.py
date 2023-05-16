@@ -11,7 +11,7 @@ from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
-from question.models import QUESTIONS_SECTIONS
+from question.models import question
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
 
@@ -40,18 +40,19 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
 
 # @cache(expire=60 * 10)
 @quiz_router.get("/get", name="quiz:get quiz", dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
-async def get_quiz(session: AsyncSession = Depends(get_async_session)) -> dict:
+async def get_quiz(number_questions: int = 50, session: AsyncSession = Depends(get_async_session)):
     try:
-        software_table = QUESTIONS_SECTIONS[0]
-        network_table = QUESTIONS_SECTIONS[1]
-        ai_table = QUESTIONS_SECTIONS[2]
-        first_query = select(software_table).order_by(func.random())
-        second_query = select(network_table).order_by(func.random())
-        third_query = select(ai_table).order_by(func.random())
+        number_software_questions = number_questions * 0.6
+        number_network_questions = number_questions * 0.2
+        number_ai_questions = number_questions * 0.2
 
-        software = await session.execute(first_query)
-        network = await session.execute(second_query)
-        ai = await session.execute(third_query)
+        software_query = select(question).where(question.c.section_id == 1).order_by(func.random()).limit(number_software_questions)
+        network_query = select(question).where(question.c.section_id == 2).order_by(func.random()).limit(number_network_questions)
+        ai_query = select(question).where(question.c.section_id == 3).order_by(func.random()).limit(number_ai_questions)
+
+        software = await session.execute(software_query)
+        network = await session.execute(network_query)
+        ai = await session.execute(ai_query)
 
         software = ResultIntoList(result_proxy=software)
         network = ResultIntoList(result_proxy=network)
@@ -61,7 +62,10 @@ async def get_quiz(session: AsyncSession = Depends(get_async_session)) -> dict:
 
         num_random.shuffle(result)
 
-        return result
+        return {"status": "success",
+                "data": result,
+                "details": None
+                }
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

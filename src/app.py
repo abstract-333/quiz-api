@@ -1,10 +1,11 @@
+from fastapi_profiler import PyInstrumentProfilerMiddleware
 from sqladmin import Admin
 from admin.auth import AdminAuth
-from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, SoftwareQuestionAdmin, \
-    NetworkQuestionAdmin, AIQuestionAdmin
+from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, QuestionAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
+from feedback.router import feedback_router
 from question.router import question_router
 from quiz.router import quiz_router
 from section.router import section_router
@@ -34,12 +35,11 @@ admin.add_view(UserAdmin)
 admin.add_view(RoleAdmin)
 admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
-admin.add_view(SoftwareQuestionAdmin)
-admin.add_view(NetworkQuestionAdmin)
-admin.add_view(AIQuestionAdmin)
+admin.add_view(QuestionAdmin)
 
 app.include_router(auth_router)
 app.include_router(question_router)
+app.include_router(quiz_router)
 app.include_router(section_router)
 app.include_router(university_router)
-app.include_router(quiz_router)
+app.include_router(feedback_router)
