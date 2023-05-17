@@ -8,14 +8,12 @@ from section.models import section
 
 
 class QuestionRead(BaseModel):
-    resolve_time: int
     question_title: str
     choices: set
     answer: str
 
 
 class QuestionCreate(BaseModel):
-    resolve_time: int
     question_title: str
     choices: list
     answer: str
@@ -26,8 +24,7 @@ class QuestionCreate(BaseModel):
 class Question(Base):
     __tablename__ = "question"
     id = Column(Integer, primary_key=True)
-    resolve_time = Column(Integer, nullable=False)
-    question_title = Column(String(length=200, collation='utf8mb4_general_ci'), nullable=False)
+    question_title = Column(String(length=200), nullable=False)
     choices = Column(JSON, nullable=False)
     answer = Column(String(length=25), nullable=False)
     added_by = Column(Integer, ForeignKey(user.c.id), nullable=False)

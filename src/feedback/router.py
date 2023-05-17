@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
@@ -241,7 +241,7 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
         if page < 1:
             raise InvalidPage
 
-        question_query = select(feedback).where(feedback.c.user_id == verified_user.id).offset(page - 1).offset(
+        question_query = select(feedback).where(feedback.c.user_id == verified_user.id).order_by(desc(feedback.c.added_at)).offset(page - 1).offset(
             page - 1).limit(10)
         result_proxy = await session.execute(question_query)
 
@@ -271,7 +271,7 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
         if page < 1:
             raise InvalidPage
 
-        question_query = select(feedback).where(feedback.c.question_author_id == verified_user.id).offset(page-1).limit(10)
+        question_query = select(feedback).where(feedback.c.question_author_id == verified_user.id).order_by(desc(feedback.c.added_at)).offset(page-1).limit(10)
         result_proxy = await session.execute(question_query)
 
         result = ResultIntoList(result_proxy=result_proxy)

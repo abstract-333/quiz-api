@@ -33,7 +33,7 @@ class Feedback(Base):
     __tablename__ = "feedback"
     id = Column(Integer, primary_key=True)
     rating = Column(SMALLINT(unsigned=True), nullable=False)
-    feedback_title = Column(String(length=255, collation="utf8mb4_unicode_ci"), nullable=False)
+    feedback_title = Column(String(length=255), nullable=False)
     added_at = Column(TIMESTAMP, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey(user.c.id), nullable=False)
     question_id = Column(Integer, ForeignKey(question.c.id), nullable=False)

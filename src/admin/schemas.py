@@ -48,7 +48,7 @@ class RoleAdmin(ModelView, model=Role):
 class QuestionAdmin(ModelView, model=Question):
     name = "Question"
     name_plural = "Questions"
-    column_list = [Question.id, Question.resolve_time, Question.question_title, Question.choices, Question.answer,
+    column_list = [Question.id, Question.question_title, Question.choices, Question.answer,
                    Question.added_by, Question.added_at, Question.section_id]
     can_edit = True
     can_delete = True

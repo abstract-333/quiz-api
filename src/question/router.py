@@ -166,8 +166,7 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
             if (Counter(element["choices"]), element["question_title"]) == (Counter(added_question.choices),
                                                                             added_question.question_title):
                 raise DuplicatedQuestionException
-        question_create = QuestionCreate(resolve_time=added_question.resolve_time,
-                                         question_title=added_question.question_title,
+        question_create = QuestionCreate(question_title=added_question.question_title,
                                          choices=list(added_question.choices),  # converting set to list
                                          answer=added_question.answer,
                                          added_by=verified_user.id,
@@ -268,8 +267,8 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         result = ResultIntoList(result_proxy=result_proxy)
         result = list(itertools.chain(result.parse()))
 
-        if (Counter(result["choices"]), result["resolve_time"], result["question_title"], result["answer"]) == (
-                Counter(edited_question.choices), edited_question.resolve_time, edited_question.question_title,
+        if (Counter(result["choices"]), result["question_title"], result["answer"]) == (
+                Counter(edited_question.choices), edited_question.question_title,
                 edited_question.answer):
             return {"status": "success",
                     "data": edited_question,
@@ -284,13 +283,12 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         result = list(itertools.chain(result.parse()))
 
         for element in result:
-            if (Counter(element["choices"]), element["resolve_time"], element["question_title"], element["answer"]) == (
-                    Counter(edited_question.choices), edited_question.resolve_time, edited_question.question_title,
+            if (Counter(element["choices"]), element["question_title"], element["answer"]) == (
+                    Counter(edited_question.choices), edited_question.question_title,
                     edited_question.answer):
                 raise DuplicatedQuestionException
 
-        question_update = QuestionCreate(resolve_time=edited_question.resolve_time,
-                                         question_title=edited_question.question_title,
+        question_update = QuestionCreate(question_title=edited_question.question_title,
                                          choices=list(edited_question.choices),
                                          answer=edited_question.answer,
                                          added_by=verified_user.id,
