@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey
@@ -11,13 +12,13 @@ from question.models import question
 
 class FeedbackRead(BaseModel):
     rating: int
-    feedback_title: str
+    feedback_title: Optional[str]
     question_id: int
 
 
 class FeedbackCreate(BaseModel):
     rating: int
-    feedback_title: str
+    feedback_title: Optional[str]
     user_id: int
     question_id: int
     question_author_id: int
@@ -25,7 +26,7 @@ class FeedbackCreate(BaseModel):
 
 class FeedbackUpdate(BaseModel):
     rating: int
-    feedback_title: str
+    feedback_title: Optional[str]
 
 
 class Feedback(Base):
