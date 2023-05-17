@@ -2,6 +2,7 @@ from sqladmin import ModelView
 
 from auth.models import User
 from auth.schemas import Role
+from feedback.schemas import Feedback
 from question.schemas import Question
 from section.schemas import Section
 from university.schames import University
@@ -47,7 +48,20 @@ class RoleAdmin(ModelView, model=Role):
 class QuestionAdmin(ModelView, model=Question):
     name = "Question"
     name_plural = "Questions"
-    column_list = [Question.id, Question.resolve_time, Question.question_title, Question.choices, Question.answer, Question.added_by, Question.added_at, Question.section_id]
+    column_list = [Question.id, Question.resolve_time, Question.question_title, Question.choices, Question.answer,
+                   Question.added_by, Question.added_at, Question.section_id]
+    can_edit = True
+    can_delete = True
+    can_create = True
+    can_view_details = True
+    form_include_pk = True
+
+
+class FeedbackAdmin(ModelView, model=Feedback):
+    name = "Feedback"
+    name_plural = "Feedbacks"
+    column_list = [Feedback.id, Feedback.rating, Feedback.feedback_title, Feedback.user_id, Feedback.question_id,
+                   Feedback.question_author_id]
     can_edit = True
     can_delete = True
     can_create = True

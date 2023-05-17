@@ -1,7 +1,7 @@
 from fastapi_profiler import PyInstrumentProfilerMiddleware
 from sqladmin import Admin
 from admin.auth import AdminAuth
-from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, QuestionAdmin
+from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, QuestionAdmin, FeedbackAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
@@ -36,6 +36,7 @@ admin.add_view(RoleAdmin)
 admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
 admin.add_view(QuestionAdmin)
+admin.add_view(FeedbackAdmin)
 
 app.include_router(auth_router)
 app.include_router(question_router)

@@ -8,8 +8,6 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
 from starlette import status
-from auth.base_config import current_user
-from auth.models import User
 from database import get_async_session
 from question.models import question
 from utils.custom_exceptions import InvalidPage
