@@ -11,6 +11,7 @@ from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
+from feedback.functions import feedbacks_sent, feedbacks_received, feedbacks_by_id
 from feedback.models import feedback
 from feedback.schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
 from question.models import question
@@ -165,7 +166,7 @@ PATCH_FEEDBACK_QUESTION_RESPONSES: OpenAPIResponseType = {
 async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)):
     try:
-        if added_feedback.rating not in (0, 1, 2, 3, 4, 5):
+        if added_feedback.rating not in (1, 2, 3, 4, 5):
             raise RatingException
 
         question_query = select(question).where(
@@ -241,12 +242,7 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
         if page < 1:
             raise InvalidPage
 
-        question_query = select(feedback).where(feedback.c.user_id == verified_user.id).order_by(desc(feedback.c.added_at)).offset(page - 1).offset(
-            page - 1).limit(10)
-        result_proxy = await session.execute(question_query)
-
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))
+        result = await feedbacks_sent(page=page, session=session, user_id=verified_user.id)
 
         return {"status": "success",
                 "data": result,
@@ -262,7 +258,7 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
 
 @feedback_router.get("/get/received", name="feedback:get received feedback", dependencies=[Depends(HTTPBearer())],
                      responses=GET_FEEDBACK_SENT_RESPONSES)
-async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current_user),
+async def get_sent_received(page: int = 1, verified_user: User = Depends(current_user),
                             session: AsyncSession = Depends(get_async_session)):
     try:
         if verified_user.role_id == 1:
@@ -271,11 +267,7 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
         if page < 1:
             raise InvalidPage
 
-        question_query = select(feedback).where(feedback.c.question_author_id == verified_user.id).order_by(desc(feedback.c.added_at)).offset(page-1).limit(10)
-        result_proxy = await session.execute(question_query)
-
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))
+        result = await feedbacks_received(page=page, session=session, user_id=verified_user.id)
 
         return {"status": "success",
                 "data": result,
@@ -297,15 +289,10 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
 async def add_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)):
     try:
-        if edited_feedback.rating not in (0, 1, 2, 3, 4, 5):
+        if edited_feedback.rating not in (1, 2, 3, 4, 5):
             raise RatingException
 
-        feedback_query = select(feedback).where(
-            feedback.c.id == feedback_id).order_by(feedback.c.added_at)
-        result_proxy = await session.execute(feedback_query)
-
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))
+        result = await feedbacks_by_id(feedback_id=feedback_id, session=session)
 
         if not result:
             raise FeedbackNotExists
@@ -358,3 +345,5 @@ async def add_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, verifi
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+

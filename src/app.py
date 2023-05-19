@@ -8,6 +8,7 @@ from database import engine
 from feedback.router import feedback_router
 from question.router import question_router
 from quiz.router import quiz_router
+from rating.router import rating_router
 from section.router import section_router
 from university.router import university_router
 from redis import asyncio as aioredis
@@ -44,3 +45,4 @@ app.include_router(quiz_router)
 app.include_router(section_router)
 app.include_router(university_router)
 app.include_router(feedback_router)
+app.include_router(rating_router)

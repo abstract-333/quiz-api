@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
 from auth.base_config import fastapi_users, auth_backend
+from rating.router import rating_router
 from auth.reset_password import reset_password_router
 from auth.schemas import UserRead, UserCreate, UserUpdate
 from auth.verify import verify_router
@@ -17,7 +18,6 @@ auth_router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
 )
 auth_router.include_router(verify_router)
-
 auth_router.include_router(reset_password_router)
 auth_router.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),

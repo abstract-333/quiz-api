@@ -4,14 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
-from auth.models import User
+from auth.models import User, user
 from database import get_async_session
+from feedback.models import feedback
 from question.models import question
 from question.schemas import QuestionCreate, QuestionRead
+from question.fuctions import get_questions, get_questions_section, checking_question_validity, get_questions_title
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage
 from utils.error_code import ErrorCode
@@ -135,37 +137,21 @@ GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
 }
 
 
-async def checking_question_validity(added_quiz, verified_user):
-    added_quiz.choices.discard('')  # removing empty string from set
-
-    if verified_user.role_id == 1:  # user can't add questions
-        raise UserNotAdminSupervisor
-
-    if len(added_quiz.choices) != 4:  # checking if question have 4 choices
-        raise NumberOfChoicesNotFour
-
-    if added_quiz.answer not in added_quiz.choices:  # checking if answer included in choices
-        raise AnswerNotIncluded
-
-
 @question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
                       responses=ADD_PATCH_QUESTION_RESPONSES)
 async def add_question(added_question: QuestionRead, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
-        await checking_question_validity(added_question, verified_user)
+        await checking_question_validity(received_question=added_question, role_id=verified_user.role_id)
 
-        query = select(question).where(question.c.question_title == added_question.question_title)
-        result_proxy = await session.execute(query)
+        questions_same_question_title = await get_questions_title(question_title=added_question.question_title, session=session)
 
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))  # converting result to list
-
-        for element in result:
+        for element in questions_same_question_title:
             # checking if duplicated
             if (Counter(element["choices"]), element["question_title"]) == (Counter(added_question.choices),
                                                                             added_question.question_title):
                 raise DuplicatedQuestionException
+
         question_create = QuestionCreate(question_title=added_question.question_title,
                                          choices=list(added_question.choices),  # converting set to list
                                          answer=added_question.answer,
@@ -206,12 +192,8 @@ async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_asy
         if page < 1:
             raise InvalidPage
 
-        query = select(question).where(question.c.added_by == verified_user.id).offset(page - 1).limit(10)
+        result = await get_questions(page=page, session=session, user_id=verified_user.id)
 
-        result_proxy = await session.execute(query)
-        result = ResultIntoList(result_proxy=result_proxy)
-
-        result = list(itertools.chain(result.parse()))
         return {"status": "success",
                 "data": result,
                 "detail": None}
@@ -233,11 +215,7 @@ async def get_question_section_id(section_id: int, page: int = 1,
         if section_id not in (1, 2, 3):
             raise OutOfSectionIdException
 
-        question_list_query = select(question).where(question.c.section_id == section_id).offset(page - 1).limit(10)
-        result_proxy = await session.execute(question_list_query)
-
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))
+        result = await get_questions_section(page=page, section_id=section_id, session=session)
 
         return {"status": "success",
                 "data": result,
