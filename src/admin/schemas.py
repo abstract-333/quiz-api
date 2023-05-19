@@ -4,6 +4,7 @@ from auth.models import User
 from auth.schemas import Role
 from feedback.schemas import Feedback
 from question.schemas import Question
+from rating.schemas import Rating
 from section.schemas import Section
 from university.schames import University
 
@@ -62,6 +63,18 @@ class FeedbackAdmin(ModelView, model=Feedback):
     name_plural = "Feedbacks"
     column_list = [Feedback.id, Feedback.rating, Feedback.feedback_title, Feedback.user_id, Feedback.question_id,
                    Feedback.question_author_id]
+    can_edit = True
+    can_delete = True
+    can_create = True
+    can_view_details = True
+    form_include_pk = True
+
+
+class RatingAdmin(ModelView, model=Rating):
+    name = "Rating"
+    name_plural = "Ratings"
+    column_list = [Rating.id, Rating.user_id, Rating.university_id, Rating.questions_number, Rating.percent_solved]
+
     can_edit = True
     can_delete = True
     can_create = True

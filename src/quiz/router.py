@@ -1,18 +1,15 @@
-import itertools
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_cache.decorator import cache
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
-from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
 from starlette import status
 from database import get_async_session
-from question.models import question
-from utils.custom_exceptions import InvalidPage
+from quiz.quiz_db import get_quiz_db
+from utils.custom_exceptions import InvalidPage, QuestionsInvalidNumber
 from utils.error_code import ErrorCode
-from utils.result_into_list import ResultIntoList
 
 quiz_router = APIRouter(
     prefix="/quiz",
@@ -25,9 +22,9 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
         "content": {
             "application/json": {
                 "examples": {
-                    ErrorCode.INVALID_PAGE: {
-                        "summary": "Invalid page",
-                        "value": {"detail": ErrorCode.INVALID_PAGE},
+                    ErrorCode.QUESTIONS_NUMBER_INVALID: {
+                        "summary": "Invalid number of questions",
+                        "value": {"detail": ErrorCode.QUESTIONS_NUMBER_INVALID},
                     }
                 }
             },
@@ -55,27 +52,16 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
 async def get_quiz(number_questions: int = 50, session: AsyncSession = Depends(get_async_session)):
     try:
         if number_questions not in range(10, 51):
-            raise InvalidPage
+            raise QuestionsInvalidNumber
 
-        number_software_questions = number_questions * 0.6
-        number_network_questions = number_questions * 0.2
-        number_ai_questions = number_questions * 0.2
+        number_software_questions = int(number_questions * 0.6)
+        number_network_questions = int(number_questions * 0.2)
+        number_ai_questions = int(number_questions * 0.2)
 
-        software_query = select(question).where(question.c.section_id == 1).order_by(func.random()).limit(
-            number_software_questions)
-        network_query = select(question).where(question.c.section_id == 2).order_by(func.random()).limit(
-            number_network_questions)
-        ai_query = select(question).where(question.c.section_id == 3).order_by(func.random()).limit(number_ai_questions)
-
-        software = await session.execute(software_query)
-        network = await session.execute(network_query)
-        ai = await session.execute(ai_query)
-
-        software = ResultIntoList(result_proxy=software)
-        network = ResultIntoList(result_proxy=network)
-        ai = ResultIntoList(result_proxy=ai)
-
-        result = list(itertools.chain(software.parse(), network.parse(), ai.parse()))
+        result = await get_quiz_db(number_ai_questions=number_ai_questions,
+                                   number_network_questions=number_network_questions,
+                                   number_software_questions=number_software_questions,
+                                   session=session)
 
         num_random.shuffle(result)
 
@@ -85,7 +71,9 @@ async def get_quiz(number_questions: int = 50, session: AsyncSession = Depends(g
                 }
 
     except InvalidPage:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.INVALID_PAGE)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+

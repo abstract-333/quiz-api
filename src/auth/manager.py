@@ -1,15 +1,16 @@
 from typing import Optional, Union
+
+import jwt
 from fastapi import Depends, Request
-from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas, jwt
+from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
 from fastapi_users.jwt import decode_jwt
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
-from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import HTMLResponse
 from auth.models import User
 from auth.schemas import UserCreate
 from config import SECRET_KEY
-from database import get_async_session, async_session_maker
+from database import get_async_session
 from utils.password_manager import PasswordManager
 from utils.constants import Constants
 from utils.email import send_email
@@ -77,7 +78,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         send_email.delay(user.username, Constants.EMAIL_CONFIRM, user.email, token)
         print(f"Verification requested for user {user.id}. Verification token: {token}")
 
-    async def verify(self, token: str, request: Optional[Request] = None) -> models.UP:
+    async def verify(self, token: str, request: Optional[Request] = None) -> HTMLResponse:
         try:
             data = decode_jwt(
                 token,
@@ -90,16 +91,19 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         try:
             user_id = data["sub"]
             email = data["email"]
+
         except KeyError:
             raise exceptions.InvalidVerifyToken()
 
         try:
             user = await self.get_by_email(email)
+
         except exceptions.UserNotExists:
             raise exceptions.InvalidVerifyToken()
 
         try:
             parsed_id = self.parse_id(user_id)
+
         except exceptions.InvalidID:
             raise exceptions.InvalidVerifyToken()
 
@@ -123,7 +127,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_register(
             self, user: models.UP, request: Optional[Request] = None
     ) -> None:
-        # await self.request_verify(user, request)
+        await self.request_verify(user, request)
         return None
 
     async def create(

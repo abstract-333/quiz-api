@@ -2,17 +2,16 @@ import itertools
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from sqlalchemy import select, func, desc, update, insert
+from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-
 from auth.base_config import current_user
 from auth.models import user, User
 from database import get_async_session
 from feedback.models import feedback
-from rating.models import rating
-from rating.rating_db import rating_user_id
+from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db
 from rating.schemas import RatingRead, RatingUpdate, RatingCreate
+from utils.custom_exceptions import QuestionsInvalidNumber
 from utils.result_into_list import ResultIntoList
 
 rating_router = APIRouter(
@@ -27,8 +26,8 @@ async def add_feedback(session: AsyncSession = Depends(get_async_session)):
         query = select(
             user.c.username,
             (func.sum(feedback.c.rating) / func.count(feedback.c.id)).label('average_rating'),
-            func.count(feedback.c.id).label('count_of_rates')
-        ).join(feedback, user.c.id == feedback.c.question_author_id). \
+            func.count(feedback.c.id).label('count_of_rates'))\
+            .join(feedback, user.c.id == feedback.c.question_author_id). \
             order_by(desc((func.sum(feedback.c.rating) / func.count(feedback.c.id)))) \
             .group_by(feedback.c.question_author_id). \
             having((func.sum(feedback.c.rating) / func.count(feedback.c.id)) > 2.5). \
@@ -48,7 +47,7 @@ async def add_feedback(session: AsyncSession = Depends(get_async_session)):
 async def get_rating_me(verified_user: User = Depends(current_user),
                         session: AsyncSession = Depends(get_async_session)):
     try:
-        rating_user = await rating_user_id(user_id=verified_user.id, session=session)
+        rating_user = await get_rating_user_id(user_id=verified_user.id, session=session)
 
         return {"status": "success",
                 "data": rating_user,
@@ -63,9 +62,16 @@ async def get_rating_me(verified_user: User = Depends(current_user),
 async def add_rating(rating_read: RatingRead, verified_user: User = Depends(current_user),
                      session: AsyncSession = Depends(get_async_session)):
     try:
-        rating_user_row = await rating_user_id(user_id=verified_user.id, session=session)
+        if rating_read.questions_number not in range(10, 51) or rating_read.solved not in range(51):
+            raise QuestionsInvalidNumber
+
+        if rating_read.solved > rating_read.questions_number:
+            raise QuestionsInvalidNumber
+
+        rating_user_row = await get_rating_user_id(user_id=verified_user.id, session=session)
 
         if rating_user_row:
+
             total_number_questions = rating_read.questions_number + rating_user_row[0]["questions_number"]
             old_number_solved = rating_user_row[0]["percent_solved"] * rating_user_row[0]["questions_number"]
             total_number_solved = rating_read.solved + old_number_solved
@@ -74,9 +80,12 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
             updated_rating = RatingUpdate(questions_number=total_number_questions,
                                           percent_solved=percent_solved)
 
-            stmt = update(rating).values(**updated_rating.dict()).where(rating.c.id == rating_user_row[0]["id"])
-            await session.execute(stmt)
-            await session.commit()
+            await update_rating_db(rating_id=rating_user_row[0]["id"], session=session, updated_rating=updated_rating)
+
+            return {"status": "success",
+                    "data": updated_rating,
+                    "detail": None
+                    }
 
         else:
             percent_solved = rating_read.solved / rating_read.questions_number
@@ -86,11 +95,14 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
                                          questions_number=rating_read.questions_number,
                                          percent_solved=percent_solved)
 
-            stmt = insert(rating).values(**rating_create.dict())
-            await session.execute(stmt)
-            await session.commit()
+            await insert_rating_db(rating_create=rating_create, session=session)
 
-        return {"Success"}
+            return {"status": "success",
+                    "data": rating_read,
+                    "detail": None
+                    }
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+

@@ -1,7 +1,7 @@
 from fastapi_profiler import PyInstrumentProfilerMiddleware
 from sqladmin import Admin
 from admin.auth import AdminAuth
-from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, QuestionAdmin, FeedbackAdmin
+from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, QuestionAdmin, FeedbackAdmin, RatingAdmin
 from auth.router import auth_router
 from config import SECRET_KEY
 from database import engine
@@ -29,20 +29,20 @@ admin = Admin(app=app, engine=engine, authentication_backend=authentication_back
 async def startup():
     redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    app.state.selected_questions_id = set()
 
 
 admin.add_view(UserAdmin)
 admin.add_view(RoleAdmin)
+admin.add_view(QuestionAdmin)
+admin.add_view(RatingAdmin)
+admin.add_view(FeedbackAdmin)
 admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
-admin.add_view(QuestionAdmin)
-admin.add_view(FeedbackAdmin)
 
 app.include_router(auth_router)
 app.include_router(question_router)
 app.include_router(quiz_router)
+app.include_router(rating_router)
+app.include_router(feedback_router)
 app.include_router(section_router)
 app.include_router(university_router)
-app.include_router(feedback_router)
-app.include_router(rating_router)

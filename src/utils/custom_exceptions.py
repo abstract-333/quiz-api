@@ -33,6 +33,11 @@ class QuestionNotExists(Exception):
     pass
 
 
+class QuestionsInvalidNumber(Exception):
+    """QUESTIONS_INVALID_NUMBER"""
+    pass
+
+
 class RatingException(Exception):
     """RATING_EXCEPTION"""
     pass

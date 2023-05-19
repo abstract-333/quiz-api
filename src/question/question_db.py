@@ -1,13 +1,13 @@
 import itertools
-from sqlalchemy import select, update
+from sqlalchemy import select, update, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.models import question
-from question.schemas import QuestionRead, QuestionUpdate
+from question.schemas import QuestionRead, QuestionUpdate, QuestionCreate
 from utils.custom_exceptions import UserNotAdminSupervisor, NumberOfChoicesNotFour, AnswerNotIncluded
 from utils.result_into_list import ResultIntoList
 
 
-async def checking_question_validity(received_question: QuestionRead, role_id: int):
+async def check_question_validity(received_question: QuestionRead, role_id: int):
     received_question.choices.discard('')  # removing empty string from set
 
     if role_id == 1:  # user can't add questions
@@ -63,7 +63,7 @@ async def get_questions_title_db(question_title: str, session: AsyncSession):
     return result
 
 
-async def question_id_db(question_id: int, session: AsyncSession):
+async def get_question_id_db(question_id: int, session: AsyncSession):
     # get questions by id
     question_query = select(question).where(
         question.c.id == question_id)
@@ -75,7 +75,7 @@ async def question_id_db(question_id: int, session: AsyncSession):
     return result_question
 
 
-async def question_update_db(question_id: int, question_update: QuestionUpdate, session: AsyncSession):
+async def update_question_db(question_id: int, question_update: QuestionUpdate, session: AsyncSession):
     # get question by question_id
 
     stmt = update(question).values(**question_update.dict()).where(question.c.id == question_id)
@@ -83,7 +83,7 @@ async def question_update_db(question_id: int, question_update: QuestionUpdate, 
     await session.commit()
 
 
-async def questions_duplicated_db(question_title: str, question_id: int, session: AsyncSession):
+async def get_questions_duplicated_db(question_title: str, question_id: int, session: AsyncSession):
     # get duplicated questions
 
     query = select(question).where(question.c.question_title == question_title and
@@ -92,3 +92,9 @@ async def questions_duplicated_db(question_title: str, question_id: int, session
     result = ResultIntoList(result_proxy=result_proxy)
     result = list(itertools.chain(result.parse()))
     return result
+
+
+async def insert_question_db(question_create: QuestionCreate, session: AsyncSession):
+    stmt = insert(question).values(**question_create.dict())
+    await session.execute(stmt)
+    await session.commit()

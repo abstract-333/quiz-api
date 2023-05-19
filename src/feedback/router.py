@@ -15,7 +15,7 @@ from feedback.feedback_db import feedbacks_sent_db, feedbacks_received_db, feedb
     feedbacks_question_id_user_id_db
 from feedback.models import feedback
 from feedback.schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
-from question.question_db import question_id_db
+from question.question_db import get_question_id_db
 from utils.custom_exceptions import FeedbackAlreadySent, QuestionNotExists, RatingException, DuplicatedTitle, \
     InvalidPage, FeedbackNotExists, FeedbackNotEditable, UserNotAdminSupervisor
 from utils.error_code import ErrorCode
@@ -170,7 +170,7 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
         if added_feedback.rating not in (1, 2, 3, 4, 5):
             raise RatingException
 
-        result_question = await question_id_db(question_id=added_feedback.question_id, session=session)
+        result_question = await get_question_id_db(question_id=added_feedback.question_id, session=session)
 
         if not result_question:
             raise QuestionNotExists
