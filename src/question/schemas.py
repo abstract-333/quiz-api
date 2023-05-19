@@ -21,6 +21,12 @@ class QuestionCreate(BaseModel):
     section_id: int
 
 
+class QuestionUpdate(BaseModel):
+    question_title: str
+    choices: list
+    answer: str
+
+
 class Question(Base):
     __tablename__ = "question"
     id = Column(Integer, primary_key=True)
@@ -30,4 +36,3 @@ class Question(Base):
     added_by = Column(Integer, ForeignKey(user.c.id), nullable=False)
     added_at = Column(TIMESTAMP, default=datetime.utcnow)
     section_id = Column(Integer, ForeignKey(section.c.id))
-

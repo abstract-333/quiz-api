@@ -1,14 +1,13 @@
 import itertools
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.models import question
-from question.schemas import QuestionRead
+from question.schemas import QuestionRead, QuestionUpdate
 from utils.custom_exceptions import UserNotAdminSupervisor, NumberOfChoicesNotFour, AnswerNotIncluded
 from utils.result_into_list import ResultIntoList
 
 
 async def checking_question_validity(received_question: QuestionRead, role_id: int):
-
     received_question.choices.discard('')  # removing empty string from set
 
     if role_id == 1:  # user can't add questions
@@ -21,7 +20,8 @@ async def checking_question_validity(received_question: QuestionRead, role_id: i
         raise AnswerNotIncluded
 
 
-async def get_questions(page: int, user_id: int, session: AsyncSession):
+async def get_questions_id_db(page: int, user_id: int, session: AsyncSession):
+    # get questions by user_id
 
     page -= 1
     page *= 10
@@ -35,7 +35,8 @@ async def get_questions(page: int, user_id: int, session: AsyncSession):
     return result
 
 
-async def get_questions_section(page: int, section_id: int, session: AsyncSession):
+async def get_questions_section_db(page: int, section_id: int, session: AsyncSession):
+    # get questions by section_id
 
     page -= 1
     page *= 10
@@ -50,7 +51,8 @@ async def get_questions_section(page: int, section_id: int, session: AsyncSessio
     return result
 
 
-async def get_questions_title(question_title: str, session: AsyncSession):
+async def get_questions_title_db(question_title: str, session: AsyncSession):
+    # get questions by question_title
 
     query = select(question).where(question.c.question_title == question_title)
     result_proxy = await session.execute(query)
@@ -60,3 +62,33 @@ async def get_questions_title(question_title: str, session: AsyncSession):
 
     return result
 
+
+async def question_id_db(question_id: int, session: AsyncSession):
+    # get questions by id
+    question_query = select(question).where(
+        question.c.id == question_id)
+    result_proxy = await session.execute(question_query)
+
+    result_question = ResultIntoList(result_proxy=result_proxy)
+    result_question = list(itertools.chain(result_question.parse()))
+
+    return result_question
+
+
+async def question_update_db(question_id: int, question_update: QuestionUpdate, session: AsyncSession):
+    # get question by question_id
+
+    stmt = update(question).values(**question_update.dict()).where(question.c.id == question_id)
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def questions_duplicated_db(question_title: str, question_id: int, session: AsyncSession):
+    # get duplicated questions
+
+    query = select(question).where(question.c.question_title == question_title and
+                                   question.c.id != question_id)
+    result_proxy = await session.execute(query)
+    result = ResultIntoList(result_proxy=result_proxy)
+    result = list(itertools.chain(result.parse()))
+    return result

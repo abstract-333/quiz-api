@@ -12,8 +12,9 @@ from auth.models import User, user
 from database import get_async_session
 from feedback.models import feedback
 from question.models import question
-from question.schemas import QuestionCreate, QuestionRead
-from question.fuctions import get_questions, get_questions_section, checking_question_validity, get_questions_title
+from question.schemas import QuestionCreate, QuestionRead, QuestionUpdate
+from question.question_db import get_questions_id_db, get_questions_section_db, checking_question_validity, \
+    get_questions_title_db, question_update_db, question_id_db
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage
 from utils.error_code import ErrorCode
@@ -144,7 +145,8 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
     try:
         await checking_question_validity(received_question=added_question, role_id=verified_user.role_id)
 
-        questions_same_question_title = await get_questions_title(question_title=added_question.question_title, session=session)
+        questions_same_question_title = await get_questions_title_db(question_title=added_question.question_title, \
+                                                                     session=session)
 
         for element in questions_same_question_title:
             # checking if duplicated
@@ -192,7 +194,7 @@ async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_asy
         if page < 1:
             raise InvalidPage
 
-        result = await get_questions(page=page, session=session, user_id=verified_user.id)
+        result = await get_questions_id_db(page=page, session=session, user_id=verified_user.id)
 
         return {"status": "success",
                 "data": result,
@@ -215,7 +217,7 @@ async def get_question_section_id(section_id: int, page: int = 1,
         if section_id not in (1, 2, 3):
             raise OutOfSectionIdException
 
-        result = await get_questions_section(page=page, section_id=section_id, session=session)
+        result = await get_questions_section_db(page=page, section_id=section_id, session=session)
 
         return {"status": "success",
                 "data": result,
@@ -239,13 +241,9 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
         await checking_question_validity(edited_question, verified_user)
 
-        query = select(question).where(question.c.id == question_id)
-        result_proxy = await session.execute(query)
+        question_old = await question_id_db(question_id=question_id, session=session)
 
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))
-
-        if (Counter(result["choices"]), result["question_title"], result["answer"]) == (
+        if (Counter(question_old[0]["choices"]), question_old[0]["question_title"], question_old[0]["answer"]) == (
                 Counter(edited_question.choices), edited_question.question_title,
                 edited_question.answer):
             return {"status": "success",
@@ -253,12 +251,8 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                     "details": None
                     }
 
-        query = select(question).where(question.c.question_title == edited_question.question_title and
-                                       question.c.id != question_id)
-        result_proxy = await session.execute(query)
-
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))
+        result = await questions_duplicated_db(question_title=edited_question.question_title, question_id=question_id,
+                                               session=session)
 
         for element in result:
             if (Counter(element["choices"]), element["question_title"], element["answer"]) == (
@@ -266,16 +260,11 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                     edited_question.answer):
                 raise DuplicatedQuestionException
 
-        question_update = QuestionCreate(question_title=edited_question.question_title,
+        question_update = QuestionUpdate(question_title=edited_question.question_title,
                                          choices=list(edited_question.choices),
                                          answer=edited_question.answer,
-                                         added_by=verified_user.id,
-                                         section_id=verified_user.section_id
                                          )
-
-        stmt = update(question).values(**question_update.dict()).where(question.c.id == question_id)
-        await session.execute(stmt)
-        await session.commit()
+        await question_update_db(question_id=question_id, question_update=question_update, session=session)
 
         return {"status": "success",
                 "data": edited_question,
@@ -296,3 +285,5 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+

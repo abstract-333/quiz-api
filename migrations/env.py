@@ -13,6 +13,7 @@ from src.university.models import metadata as metadata_university
 from src.auth.models import metadata as metadata_auth
 from src.question.models import metadata as metadata_question
 from src.feedback.models import metadata as metadata_feedback
+from src.rating.models import metadata as metadata_rating
 
 config = context.config
 
@@ -31,7 +32,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question, metadata_feedback]
+target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question, \
+                   metadata_feedback, metadata_rating]
 
 
 # other values from the config, defined by the needs of env.py,

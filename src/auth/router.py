@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
 from auth.base_config import fastapi_users, auth_backend
-from rating.router import rating_router
 from auth.reset_password import reset_password_router
 from auth.schemas import UserRead, UserCreate, UserUpdate
 from auth.verify import verify_router

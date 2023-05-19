@@ -5,20 +5,21 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
-from sqlalchemy import insert, select, update, desc
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
-from feedback.functions import feedbacks_sent, feedbacks_received, feedbacks_by_id
+from feedback.feedback_db import feedbacks_sent_db, feedbacks_received_db, feedbacks_by_id_db, \
+    feedbacks_question_id_user_id_db
 from feedback.models import feedback
 from feedback.schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
-from question.models import question
+from question.question_db import question_id_db
 from utils.custom_exceptions import FeedbackAlreadySent, QuestionNotExists, RatingException, DuplicatedTitle, \
     InvalidPage, FeedbackNotExists, FeedbackNotEditable, UserNotAdminSupervisor
 from utils.error_code import ErrorCode
-from utils.result_into_list import ResultIntoList
+
 
 feedback_router = APIRouter(
     prefix="/feedback",
@@ -169,23 +170,13 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
         if added_feedback.rating not in (1, 2, 3, 4, 5):
             raise RatingException
 
-        question_query = select(question).where(
-            question.c.id == added_feedback.question_id)
-        result_proxy = await session.execute(question_query)
-
-        result_question = ResultIntoList(result_proxy=result_proxy)
-        result_question = list(itertools.chain(result_question.parse()))
+        result_question = await question_id_db(question_id=added_feedback.question_id, session=session)
 
         if not result_question:
             raise QuestionNotExists
 
-        feedback_query = select(feedback).where(
-            feedback.c.question_id == added_feedback.question_id and feedback.c.user_id == verified_user.id).order_by(
-            feedback.c.added_at)
-        result_proxy = await session.execute(feedback_query)
-
-        result = ResultIntoList(result_proxy=result_proxy)
-        result = list(itertools.chain(result.parse()))
+        result = await feedbacks_question_id_user_id_db(question_id=added_feedback.question_id, \
+                                                        user_id=verified_user.id, session=session)
 
         remaining_time = None
 
@@ -242,7 +233,7 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
         if page < 1:
             raise InvalidPage
 
-        result = await feedbacks_sent(page=page, session=session, user_id=verified_user.id)
+        result = await feedbacks_sent_db(page=page, session=session, user_id=verified_user.id)
 
         return {"status": "success",
                 "data": result,
@@ -267,7 +258,7 @@ async def get_sent_received(page: int = 1, verified_user: User = Depends(current
         if page < 1:
             raise InvalidPage
 
-        result = await feedbacks_received(page=page, session=session, user_id=verified_user.id)
+        result = await feedbacks_received_db(page=page, session=session, user_id=verified_user.id)
 
         return {"status": "success",
                 "data": result,
@@ -292,7 +283,7 @@ async def add_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, verifi
         if edited_feedback.rating not in (1, 2, 3, 4, 5):
             raise RatingException
 
-        result = await feedbacks_by_id(feedback_id=feedback_id, session=session)
+        result = await feedbacks_by_id_db(feedback_id=feedback_id, session=session)
 
         if not result:
             raise FeedbackNotExists
@@ -345,5 +336,3 @@ async def add_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, verifi
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
-
-
