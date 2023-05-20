@@ -135,7 +135,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             user_create: schemas.UC,
             safe: bool = False,
             request: Optional[Request] = None,
-            # session: AsyncSession = Depends(get_async_session)
     ) -> models.UP:
 
         await self.validate_password(user_create.password, user_create)

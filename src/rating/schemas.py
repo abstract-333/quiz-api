@@ -10,6 +10,7 @@ from university.models import university
 
 
 class RatingRead(BaseModel):
+    user_id: int
     questions_number: int
     solved: int
 
@@ -22,6 +23,7 @@ class RatingCreate(BaseModel):
 
 
 class RatingUpdate(BaseModel):
+    user_id: int
     questions_number: int
     percent_solved: float
 

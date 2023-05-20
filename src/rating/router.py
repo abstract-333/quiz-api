@@ -78,7 +78,8 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
             percent_solved = total_number_solved / total_number_questions
 
             updated_rating = RatingUpdate(questions_number=total_number_questions,
-                                          percent_solved=percent_solved)
+                                          percent_solved=percent_solved,
+                                          user_id=rating_read.user_id)
 
             await update_rating_db(rating_id=rating_user_row[0]["id"], session=session, updated_rating=updated_rating)
 
@@ -90,7 +91,7 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
         else:
             percent_solved = rating_read.solved / rating_read.questions_number
 
-            rating_create = RatingCreate(user_id=verified_user.id,
+            rating_create = RatingCreate(user_id=rating_read.user_id,
                                          university_id=verified_user.university_id,
                                          questions_number=rating_read.questions_number,
                                          percent_solved=percent_solved)
