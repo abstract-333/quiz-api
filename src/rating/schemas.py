@@ -1,11 +1,9 @@
-from datetime import datetime
 
 from pydantic import BaseModel
-from sqlalchemy import Column, String, Integer, ForeignKey, TIMESTAMP, JSON, Float
+from sqlalchemy import Column, Integer, ForeignKey, Float
 
 from auth.models import user
 from database import Base
-from section.models import section
 from university.models import university
 
 
