@@ -1,6 +1,6 @@
 import itertools
 
-from sqlalchemy import select, update, insert
+from sqlalchemy import select, update, insert, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from rating.models import rating
 from rating.schemas import RatingUpdate, RatingCreate
@@ -10,7 +10,19 @@ from utils.result_into_list import ResultIntoList
 async def get_rating_user_id(user_id: int, session: AsyncSession):
     # get rating by user_id
 
-    query = select(rating).where(rating.c.user_id == user_id)
+    query = select(rating).where(rating.c.user_id == user_id).order_by(desc(rating.c.added_at))
+    result_proxy = await session.execute(query)
+
+    result = ResultIntoList(result_proxy=result_proxy)
+    result = list(itertools.chain(result.parse()))
+
+    return result
+
+
+async def get_last_rating_user(user_id: int, session: AsyncSession):
+    # get rating by user_id
+
+    query = select(rating).where(rating.c.user_id == user_id).order_by(desc(rating.c.added_at)).limit(1)
     result_proxy = await session.execute(query)
 
     result = ResultIntoList(result_proxy=result_proxy)

@@ -1,7 +1,10 @@
 import itertools
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
+from fastapi_users.openapi import OpenAPIResponseType
+from fastapi_users.router.common import ErrorModel
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -9,9 +12,12 @@ from auth.base_config import current_user
 from auth.models import user, User
 from database import get_async_session
 from feedback.models import feedback
-from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db
+from rating.models import rating
+from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
 from rating.schemas import RatingRead, RatingUpdate, RatingCreate
+from university.models import university
 from utils.custom_exceptions import QuestionsInvalidNumber
+from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
 
 rating_router = APIRouter(
@@ -19,14 +25,45 @@ rating_router = APIRouter(
     tags=["Rating"],
 )
 
+POST_RATING_RESPONSES: OpenAPIResponseType = {
+    status.HTTP_400_BAD_REQUEST: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.QUESTIONS_NUMBER_INVALID: {
+                        "summary": "Invalid number of questions",
+                        "value": {"detail": ErrorCode.QUESTIONS_NUMBER_INVALID},
+                    }
+                }
+            },
+        },
+    },
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
+                    "summary": "Not authenticated",
+                    "value": {"detail": "Not authenticated"},
+                }}
+            },
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
+}
+
 
 @rating_router.get("/supervisor", name="supervisor:get best rating", dependencies=[Depends(HTTPBearer())])
-async def add_feedback(session: AsyncSession = Depends(get_async_session)):
+async def add_feedback(verified_user: User = Depends(current_user)
+                       , session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(
             user.c.username,
             (func.sum(feedback.c.rating) / func.count(feedback.c.id)).label('average_rating'),
-            func.count(feedback.c.id).label('count_of_rates'))\
+            func.count(feedback.c.id).label('count_of_rates')) \
             .join(feedback, user.c.id == feedback.c.question_author_id). \
             order_by(desc((func.sum(feedback.c.rating) / func.count(feedback.c.id)))) \
             .group_by(feedback.c.question_author_id). \
@@ -43,11 +80,32 @@ async def add_feedback(session: AsyncSession = Depends(get_async_session)):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
+@rating_router.get("/student", name="student:get best rating", dependencies=[Depends(HTTPBearer())])
+async def get_rating_students(verified_user: User = Depends(current_user)
+                              , session: AsyncSession = Depends(get_async_session)):
+    try:
+        query = select(
+            user.c.username,
+            rating.c.questions_number, rating.c.solved) \
+            .join_from(rating, user, rating.c.user_id == user.c.id). \
+            order_by(desc(rating.c.solved)) \
+            .limit(10)
+
+        result_proxy = await session.execute(query)
+
+        result = ResultIntoList(result_proxy=result_proxy)
+        result = list(itertools.chain(result.parse()))
+
+        return result
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
 @rating_router.get("/student/me", name="student:get rating", dependencies=[Depends(HTTPBearer())])
 async def get_rating_me(verified_user: User = Depends(current_user),
                         session: AsyncSession = Depends(get_async_session)):
     try:
-        rating_user = await get_rating_user_id(user_id=verified_user.id, session=session)
+        rating_user = await get_last_rating_user(user_id=verified_user.id, session=session)
 
         return {"status": "success",
                 "data": rating_user,
@@ -58,52 +116,47 @@ async def get_rating_me(verified_user: User = Depends(current_user),
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@rating_router.post("/student", name="student:add rating", dependencies=[Depends(HTTPBearer())])
+@rating_router.post("/student", name="student:add rating", dependencies=[Depends(HTTPBearer())],
+                    responses=POST_RATING_RESPONSES)
 async def add_rating(rating_read: RatingRead, verified_user: User = Depends(current_user),
                      session: AsyncSession = Depends(get_async_session)):
     try:
-        if rating_read.questions_number not in range(10, 51) or rating_read.solved not in range(51):
-            raise QuestionsInvalidNumber
-
         if rating_read.solved > rating_read.questions_number:
             raise QuestionsInvalidNumber
 
-        rating_user_row = await get_rating_user_id(user_id=verified_user.id, session=session)
+        if rating_read.questions_number not in range(51) or rating_read.solved not in range(51):
+            raise QuestionsInvalidNumber
 
-        if rating_user_row:
+        last_rating = await get_rating_user_id(user_id=verified_user.id, session=session)
 
-            total_number_questions = rating_read.questions_number + rating_user_row[0]["questions_number"]
-            old_number_solved = rating_user_row[0]["percent_solved"] * rating_user_row[0]["questions_number"]
-            total_number_solved = rating_read.solved + old_number_solved
-            percent_solved = total_number_solved / total_number_questions
+        if last_rating and last_rating[0]["added_at"].date() == datetime.now().date():
+            total_questions = rating_read.questions_number + last_rating[0]["questions_number"]
+            total_solved = rating_read.solved + last_rating[0]["solved"]
 
-            updated_rating = RatingUpdate(questions_number=total_number_questions,
-                                          percent_solved=percent_solved,
-                                          user_id=rating_read.user_id)
-
-            await update_rating_db(rating_id=rating_user_row[0]["id"], session=session, updated_rating=updated_rating)
+            rating_update = RatingUpdate(questions_number=total_questions,
+                                         solved=total_solved)
+            await update_rating_db(rating_id=last_rating[0]["id"], updated_rating=rating_update, session=session)
 
             return {"status": "success",
-                    "data": updated_rating,
+                    "data": None,
                     "detail": None
                     }
 
         else:
-            percent_solved = rating_read.solved / rating_read.questions_number
-
-            rating_create = RatingCreate(user_id=rating_read.user_id,
+            rating_create = RatingCreate(user_id=verified_user.id,
                                          university_id=verified_user.university_id,
                                          questions_number=rating_read.questions_number,
-                                         percent_solved=percent_solved)
+                                         solved=rating_read.solved)
 
             await insert_rating_db(rating_create=rating_create, session=session)
 
             return {"status": "success",
-                    "data": rating_read,
+                    "data": None,
                     "detail": None
                     }
 
+    except QuestionsInvalidNumber:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
-
-

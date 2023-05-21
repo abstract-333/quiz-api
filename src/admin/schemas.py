@@ -73,7 +73,8 @@ class FeedbackAdmin(ModelView, model=Feedback):
 class RatingAdmin(ModelView, model=Rating):
     name = "Rating"
     name_plural = "Ratings"
-    column_list = [Rating.id, Rating.user_id, Rating.university_id, Rating.questions_number, Rating.percent_solved]
+    column_list = [Rating.id, Rating.user_id, Rating.university_id,
+                   Rating.questions_number, Rating.solved, Rating.added_at]
 
     can_edit = True
     can_delete = True

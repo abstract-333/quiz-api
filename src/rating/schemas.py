@@ -1,6 +1,7 @@
+from datetime import datetime
 
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, ForeignKey, Float
+from sqlalchemy import Column, Integer, ForeignKey, TIMESTAMP
 
 from auth.models import user
 from database import Base
@@ -8,7 +9,6 @@ from university.models import university
 
 
 class RatingRead(BaseModel):
-    user_id: int
     questions_number: int
     solved: int
 
@@ -17,13 +17,12 @@ class RatingCreate(BaseModel):
     user_id: int
     university_id: int
     questions_number: int
-    percent_solved: float
+    solved: int
 
 
 class RatingUpdate(BaseModel):
-    user_id: int
     questions_number: int
-    percent_solved: float
+    solved: int
 
 
 class Rating(Base):
@@ -32,5 +31,6 @@ class Rating(Base):
     university_id = Column(Integer, ForeignKey(university.c.id))
     user_id = Column(Integer, ForeignKey(user.c.id))
     questions_number = Column(Integer, nullable=False)
-    percent_solved = Column(Float, nullable=False)
+    solved = Column(Integer, nullable=False)
+    added_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
 

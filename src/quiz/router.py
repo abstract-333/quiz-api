@@ -6,9 +6,12 @@ from fastapi_users.router.common import ErrorModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
 from starlette import status
+
+from auth.base_config import current_user
+from auth.models import User
 from database import get_async_session
 from quiz.quiz_db import get_quiz_db
-from utils.custom_exceptions import InvalidPage, QuestionsInvalidNumber
+from utils.custom_exceptions import QuestionsInvalidNumber
 from utils.error_code import ErrorCode
 
 quiz_router = APIRouter(
@@ -49,7 +52,8 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
 
 # @cache(expire=60 * 10)
 @quiz_router.get("/get", name="quiz:get quiz", dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
-async def get_quiz(number_questions: int = 50, session: AsyncSession = Depends(get_async_session)):
+async def get_quiz(number_questions: int = 50, verified_user: User = Depends(current_user),
+                   session: AsyncSession = Depends(get_async_session)):
     try:
         if number_questions not in range(10, 51):
             raise QuestionsInvalidNumber
@@ -70,7 +74,7 @@ async def get_quiz(number_questions: int = 50, session: AsyncSession = Depends(g
                 "details": None
                 }
 
-    except InvalidPage:
+    except QuestionsInvalidNumber:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
 
     except Exception:
