@@ -1,24 +1,19 @@
-import itertools
 from collections import Counter
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
-from sqlalchemy import insert, select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
-from auth.models import User, user
+from auth.models import User
 from database import get_async_session
-from feedback.models import feedback
-from question.models import question
 from question.schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from question.question_db import get_questions_id_db, get_questions_section_db, check_question_validity, \
     get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage
 from utils.error_code import ErrorCode
-from utils.result_into_list import ResultIntoList
 
 question_router = APIRouter(
     prefix="/question",

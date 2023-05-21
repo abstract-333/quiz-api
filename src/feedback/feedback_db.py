@@ -4,6 +4,7 @@ from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from feedback.models import feedback
+from question.models import question
 from utils.result_into_list import ResultIntoList
 
 
@@ -29,8 +30,9 @@ async def feedbacks_received_db(page: int, session: AsyncSession, user_id: int):
     page -= 1
     page *= 10
 
-    question_query = select(feedback).where(feedback.c.question_author_id == user_id).order_by(
-        desc(feedback.c.added_at)).slice(page, page + 10)
+    question_query = select(feedback, question.c.question_title).join(question, feedback.c.question_id == question.c.id
+                                                                      and feedback.c.question_author_id == user_id).\
+        order_by(desc(feedback.c.added_at)).slice(page, page + 10)
     result_proxy = await session.execute(question_query)
 
     result = ResultIntoList(result_proxy=result_proxy)

@@ -10,7 +10,7 @@ from utils.result_into_list import ResultIntoList
 async def get_rating_user_id(user_id: int, session: AsyncSession):
     # get rating by user_id
 
-    query = select(rating).where(rating.c.user_id == user_id).order_by(desc(rating.c.added_at))
+    query = select(rating).where(rating.c.user_id == user_id).order_by(desc(rating.c.added_at)).limit(7)
     result_proxy = await session.execute(query)
 
     result = ResultIntoList(result_proxy=result_proxy)
