@@ -6,8 +6,8 @@ from fastapi.security import HTTPBearer
 from sqladmin.authentication import AuthenticationBackend
 from starlette.responses import RedirectResponse
 
-from auth.base_config import current_user
-from auth.auth_models import User
+from admin_auth.base_config import current_user
+from admin_auth.auth_models import User
 
 
 class AdminAuth(AuthenticationBackend):

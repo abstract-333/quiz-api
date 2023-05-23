@@ -1,7 +1,7 @@
 from sqladmin import ModelView
 
-from auth.auth_models import User
-from auth.auth_schemas import Role
+from admin_auth.auth_models import User
+from admin_auth.auth_schemas import Role
 from feedback.feedback_schemas import Feedback
 from question.question_schemas import Question
 from rating.rating_schemas import Rating

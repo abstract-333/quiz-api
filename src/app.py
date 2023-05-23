@@ -1,7 +1,8 @@
 from fastapi_profiler import PyInstrumentProfilerMiddleware
 from sqladmin import Admin
-from admin.auth import AdminAuth
-from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, QuestionAdmin, FeedbackAdmin, RatingAdmin
+from admin.admin_auth import AdminAuth
+from admin.admin_schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, \
+    QuestionAdmin, FeedbackAdmin, RatingAdmin
 from auth.auth_router import auth_router
 from config import SECRET_KEY
 from database import engine
