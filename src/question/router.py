@@ -140,6 +140,7 @@ GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
 async def add_question(added_question: QuestionRead, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
+
         await check_question_validity(received_question=added_question, role_id=verified_user.role_id)
 
         questions_same_question_title = await get_questions_title_db(question_title=added_question.question_title,
@@ -283,7 +284,7 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.delete("/{question_id}", name="question: delete question", dependencies=[Depends(HTTPBearer())],)
+@question_router.delete("/{question_id}", name="question: delete question", dependencies=[Depends(HTTPBearer())], )
 async def delete_question(question_id: int, verified_user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_async_session)) -> dict:
     try:

@@ -66,3 +66,23 @@ class FeedbackNotEditable(Exception):
 class NotQuestionOwner(Exception):
     """YOU_ARE_NOT_QUESTION_OWNER"""
     pass
+
+
+class NotAllowedFeedbackYourself(Exception):
+    """NOT_ALLOWED_TO_SEND_FEEDBACK_TO_OWN_QUESTION"""
+    pass
+
+
+class NotAllowedDeleteFeedback(Exception):
+    """NOT_ALLOWED_DELETE_FEEDBACK"""
+    pass
+
+
+class NotAllowedDeleteBeforeTime(Exception):
+    """NOT_ALLOWED_DELETE_BEFORE_TIME"""
+    pass
+
+
+class NotAllowedPatchFeedback(Exception):
+    """NOT_ALLOWED_Patch_FEEDBACK"""
+    pass

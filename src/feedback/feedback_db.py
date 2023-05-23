@@ -1,11 +1,20 @@
 import itertools
+from datetime import datetime
 
-from sqlalchemy import select, desc, delete
+from sqlalchemy import select, desc, delete, TIMESTAMP
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from feedback.models import feedback
 from question.models import question
 from utils.result_into_list import ResultIntoList
+
+
+async def get_remaining_time(added_time: TIMESTAMP, target_time):
+    # return remaining turn until targeting time will be elapsed
+    remaining_time = (datetime.utcnow() - added_time).seconds
+    remaining_time = target_time - remaining_time
+
+    return remaining_time
 
 
 async def feedback_sent_db(page: int, session: AsyncSession, user_id: int):
