@@ -13,7 +13,9 @@ async def feedback_sent_db(page: int, session: AsyncSession, user_id: int):
     page -= 1
     page *= 10
 
-    question_query = select(feedback).where(feedback.c.user_id == user_id).order_by(
+    question_query = select(feedback, question.c.question_title).where(feedback.c.user_id == user_id). \
+        join(question, feedback.c.question_id == question.c.id and
+             feedback.c.user_id == user_id).order_by(
         desc(feedback.c.added_at)).slice(page, page + 10)
 
     result_proxy = await session.execute(question_query)
