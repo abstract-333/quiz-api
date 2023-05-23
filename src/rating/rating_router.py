@@ -7,13 +7,13 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
-from auth.models import user, User
+from auth.auth_models import user, User
 from database import get_async_session
-from feedback.models import feedback
-from rating.docs import POST_RATING_RESPONSES
-from rating.models import rating
+from feedback.feedback_models import feedback
+from rating.rating_docs import POST_RATING_RESPONSES
+from rating.rating_models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
-from rating.schemas import RatingRead, RatingUpdate, RatingCreate
+from rating.rating_schemas import RatingRead, RatingUpdate, RatingCreate
 from utils.custom_exceptions import QuestionsInvalidNumber, UserNotAdminSupervisor
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList

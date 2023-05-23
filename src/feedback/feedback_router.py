@@ -4,14 +4,14 @@ from sqlalchemy import insert, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
-from auth.models import User
+from auth.auth_models import User
 from database import get_async_session
-from feedback.docs import ADD_FEEDBACK_QUESTION_RESPONSES, GET_FEEDBACK_SENT_RESPONSES, \
+from feedback.feedback_docs import ADD_FEEDBACK_QUESTION_RESPONSES, GET_FEEDBACK_SENT_RESPONSES, \
     PATCH_FEEDBACK_QUESTION_RESPONSES
 from feedback.feedback_db import feedback_sent_db, feedback_received_db, feedback_by_id_db, \
     feedback_question_id_user_id_db, delete_feedback_id, get_remaining_time
-from feedback.models import feedback
-from feedback.schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
+from feedback.feedback_models import feedback
+from feedback.feedback_schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
 from question.question_db import get_question_id_db
 from utils.custom_exceptions import FeedbackAlreadySent, QuestionNotExists, RatingException, DuplicatedTitle, \
     InvalidPage, FeedbackNotExists, FeedbackNotEditable, UserNotAdminSupervisor, NotAllowedDeleteBeforeTime, NotAllowed

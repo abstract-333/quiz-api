@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from database import get_async_session
-from section.models import section
+from section.section_models import section
 from utils.result_into_list import ResultIntoList
 
 section_router = APIRouter(

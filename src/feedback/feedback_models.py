@@ -3,8 +3,8 @@ from datetime import datetime
 from sqlalchemy import MetaData, Table, Column, Integer, String, TIMESTAMP, ForeignKey
 from sqlalchemy.dialects.mysql import SMALLINT
 
-from auth.models import user
-from question.models import question
+from auth.auth_models import user
+from question.question_models import question
 
 metadata = MetaData()
 

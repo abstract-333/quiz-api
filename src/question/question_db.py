@@ -1,8 +1,8 @@
 import itertools
 from sqlalchemy import select, update, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from question.models import question
-from question.schemas import QuestionRead, QuestionUpdate, QuestionCreate
+from question.question_models import question
+from question.question_schemas import QuestionRead, QuestionUpdate, QuestionCreate
 from utils.custom_exceptions import UserNotAdminSupervisor, NumberOfChoicesNotFour, AnswerNotIncluded
 from utils.result_into_list import ResultIntoList
 

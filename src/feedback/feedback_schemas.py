@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey
 from sqlalchemy.dialects.mysql import SMALLINT
 
-from auth.models import user
+from auth.auth_models import user
 from database import Base
-from question.models import question
+from question.question_models import question
 
 
 class FeedbackRead(BaseModel):

@@ -6,9 +6,9 @@ from pydantic import EmailStr
 from starlette import status
 from fastapi import Request
 
-from auth.docs import REQUEST_VERIFY_EMAIL_RESPONSE, VERIFY_EMAIL_RESPONSE
-from auth.manager import get_user_manager
-from auth.schemas import UserRead
+from auth.auth_docs import REQUEST_VERIFY_EMAIL_RESPONSE, VERIFY_EMAIL_RESPONSE
+from auth.auth_manager import get_user_manager
+from auth.auth_schemas import UserRead
 from utils.error_code import ErrorCode
 
 verify_router = APIRouter()

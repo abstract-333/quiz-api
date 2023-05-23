@@ -2,8 +2,8 @@ from datetime import datetime
 
 from sqlalchemy import MetaData, Table, Column, Integer, ForeignKey, TIMESTAMP
 
-from auth.models import user
-from university.models import university
+from auth.auth_models import user
+from university.university_models import university
 
 metadata = MetaData()
 

@@ -4,11 +4,11 @@ from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
-from auth.models import User
+from auth.auth_models import User
 from database import get_async_session
 from feedback.feedback_db import check_feedback_question_id, delete_feedback_question_id
-from question.docs import ADD_PATCH_QUESTION_RESPONSES, GET_QUESTION_RESPONSES, GET_QUESTION_SECTION_RESPONSES
-from question.schemas import QuestionCreate, QuestionRead, QuestionUpdate
+from question.question_docs import ADD_PATCH_QUESTION_RESPONSES, GET_QUESTION_RESPONSES, GET_QUESTION_SECTION_RESPONSES
+from question.question_schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from question.question_db import get_questions_id_db, get_questions_section_db, check_question_validity, \
     get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
     delete_question_db

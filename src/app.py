@@ -2,15 +2,15 @@ from fastapi_profiler import PyInstrumentProfilerMiddleware
 from sqladmin import Admin
 from admin.auth import AdminAuth
 from admin.schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, QuestionAdmin, FeedbackAdmin, RatingAdmin
-from auth.router import auth_router
+from auth.auth_router import auth_router
 from config import SECRET_KEY
 from database import engine
-from feedback.router import feedback_router
-from question.router import question_router
-from quiz.router import quiz_router
-from rating.router import rating_router
-from section.router import section_router
-from university.router import university_router
+from feedback.feedback_router import feedback_router
+from question.question_router import question_router
+from quiz.quiz_router import quiz_router
+from rating.rating_router import rating_router
+from section.section_router import section_router
+from university.university_router import university_router
 from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend

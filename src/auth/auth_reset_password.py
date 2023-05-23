@@ -4,8 +4,8 @@ from pydantic import EmailStr
 from starlette import status
 from fastapi import Request
 
-from auth.docs import FORGET_PASSWORD_RESPONSES, RESET_PASSWORD_RESPONSES
-from auth.manager import get_user_manager
+from auth.auth_docs import FORGET_PASSWORD_RESPONSES, RESET_PASSWORD_RESPONSES
+from auth.auth_manager import get_user_manager
 from utils.error_code import ErrorCode
 
 reset_password_router = APIRouter()

@@ -2,9 +2,9 @@ from datetime import datetime
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, JSON
 
-from auth.models import user
+from auth.auth_models import user
 from database import Base
-from section.models import section
+from section.section_models import section
 
 
 class QuestionRead(BaseModel):

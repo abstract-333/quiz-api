@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
 from auth.base_config import fastapi_users, auth_backend
-from auth.reset_password import reset_password_router
-from auth.schemas import UserRead, UserCreate, UserUpdate
-from auth.verify import verify_router
+from auth.auth_reset_password import reset_password_router
+from auth.auth_schemas import UserRead, UserCreate, UserUpdate
+from auth.auth_verify import verify_router
 
 auth_router = APIRouter(
     prefix="/auth",

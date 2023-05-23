@@ -2,8 +2,8 @@ import itertools
 
 from sqlalchemy import select, update, insert, desc
 from sqlalchemy.ext.asyncio import AsyncSession
-from rating.models import rating
-from rating.schemas import RatingUpdate, RatingCreate
+from rating.rating_models import rating
+from rating.rating_schemas import RatingUpdate, RatingCreate
 from utils.result_into_list import ResultIntoList
 
 

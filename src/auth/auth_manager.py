@@ -7,8 +7,8 @@ from fastapi_users.jwt import decode_jwt
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import HTMLResponse
-from auth.models import User
-from auth.schemas import UserCreate
+from auth.auth_models import User
+from auth.auth_schemas import UserCreate
 from config import SECRET_KEY
 from database import get_async_session
 from utils.password_manager import PasswordManager

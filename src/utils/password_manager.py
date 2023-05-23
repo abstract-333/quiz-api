@@ -3,8 +3,8 @@ from typing import Union
 from fastapi_users import InvalidPasswordException
 from fastapi_users.password import PasswordHelper
 from passlib.context import CryptContext
-from auth.models import User
-from auth.schemas import UserCreate
+from auth.auth_models import User
+from auth.auth_schemas import UserCreate
 
 
 class PasswordManager:

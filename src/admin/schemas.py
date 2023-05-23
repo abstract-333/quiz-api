@@ -1,12 +1,12 @@
 from sqladmin import ModelView
 
-from auth.models import User
-from auth.schemas import Role
-from feedback.schemas import Feedback
-from question.schemas import Question
-from rating.schemas import Rating
-from section.schemas import Section
-from university.schames import University
+from auth.auth_models import User
+from auth.auth_schemas import Role
+from feedback.feedback_schemas import Feedback
+from question.question_schemas import Question
+from rating.rating_schemas import Rating
+from section.section_schemas import Section
+from university.university_schames import University
 
 
 class UserAdmin(ModelView, model=User):

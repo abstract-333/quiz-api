@@ -7,7 +7,7 @@ from sqladmin.authentication import AuthenticationBackend
 from starlette.responses import RedirectResponse
 
 from auth.base_config import current_user
-from auth.models import User
+from auth.auth_models import User
 
 
 class AdminAuth(AuthenticationBackend):

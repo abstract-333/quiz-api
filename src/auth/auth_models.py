@@ -3,8 +3,8 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import MetaData, Table, Column, Integer, String, TIMESTAMP, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from database import Base
-from section.models import section
-from university.models import university
+from section.section_models import section
+from university.university_models import university
 
 metadata = MetaData()
 

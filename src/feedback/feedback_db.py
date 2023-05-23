@@ -4,8 +4,8 @@ from datetime import datetime
 from sqlalchemy import select, desc, delete, TIMESTAMP
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from feedback.models import feedback
-from question.models import question
+from feedback.feedback_models import feedback
+from question.question_models import question
 from utils.result_into_list import ResultIntoList
 
 

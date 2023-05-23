@@ -6,9 +6,9 @@ from numpy import random as num_random
 from starlette import status
 
 from auth.base_config import current_user
-from auth.models import User
+from auth.auth_models import User
 from database import get_async_session
-from quiz.docs import GET_QUIZ_RESPONSES
+from quiz.quiz_docs import GET_QUIZ_RESPONSES
 from quiz.quiz_db import get_quiz_db
 from utils.custom_exceptions import QuestionsInvalidNumber
 from utils.error_code import ErrorCode

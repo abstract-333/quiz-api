@@ -1,8 +1,8 @@
 from datetime import datetime
 from sqlalchemy import Table, Column, Integer, String, TIMESTAMP, MetaData, JSON, ForeignKey
 
-from auth.models import user
-from section.models import section
+from auth.auth_models import user
+from section.section_models import section
 
 metadata = MetaData()
 
