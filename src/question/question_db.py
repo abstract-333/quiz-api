@@ -1,5 +1,5 @@
 import itertools
-from sqlalchemy import select, update, insert
+from sqlalchemy import select, update, insert, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.models import question
 from question.schemas import QuestionRead, QuestionUpdate, QuestionCreate
@@ -98,3 +98,11 @@ async def insert_question_db(question_create: QuestionCreate, session: AsyncSess
     stmt = insert(question).values(**question_create.dict())
     await session.execute(stmt)
     await session.commit()
+
+
+async def delete_question_db(question_id: int, session: AsyncSession):
+    # delete question by id
+    stmt = delete(question).where(question.c.id == question_id)
+    await session.execute(stmt)
+    await session.commit()
+

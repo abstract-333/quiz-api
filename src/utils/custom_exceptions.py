@@ -61,3 +61,8 @@ class FeedbackNotExists(Exception):
 class FeedbackNotEditable(Exception):
     """FEEDBACK_NOT_EDITABLE_NOW"""
     pass
+
+
+class NotQuestionOwner(Exception):
+    """YOU_ARE_NOT_QUESTION_OWNER"""
+    pass

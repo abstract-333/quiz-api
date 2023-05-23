@@ -8,11 +8,13 @@ from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
+from feedback.feedback_db import check_feedback_question_id, delete_feedback_question_id
 from question.schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from question.question_db import get_questions_id_db, get_questions_section_db, check_question_validity, \
-    get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db
+    get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
+    delete_question_db
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
-    AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage
+    AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, NotQuestionOwner, QuestionNotExists
 from utils.error_code import ErrorCode
 
 question_router = APIRouter(
@@ -244,7 +246,8 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                     "details": None
                     }
 
-        result = await get_questions_duplicated_db(question_title=edited_question.question_title, question_id=question_id,
+        result = await get_questions_duplicated_db(question_title=edited_question.question_title,
+                                                   question_id=question_id,
                                                    session=session)
 
         for element in result:
@@ -275,6 +278,41 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
     except DuplicatedQuestionException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
+
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
+@question_router.delete("/{question_id}", name="question: delete question", dependencies=[Depends(HTTPBearer())],)
+async def delete_question(question_id: int, verified_user: User = Depends(current_user),
+                          session: AsyncSession = Depends(get_async_session)) -> dict:
+    try:
+
+        check_feedback = await check_feedback_question_id(question_id=question_id, session=session)
+
+        if check_feedback:
+            await delete_feedback_question_id(question_id=question_id, session=session)
+
+        question_for_deleting = await get_question_id_db(question_id=question_id, session=session)
+
+        if not question_for_deleting:
+            raise QuestionNotExists
+
+        if question_for_deleting and question_for_deleting[0]["added_by"] != verified_user.id:
+            raise NotQuestionOwner
+
+        await delete_question_db(question_id=question_id, session=session)
+
+        return {"status": "success",
+                "data": None,
+                "details": None
+                }
+
+    except NotQuestionOwner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_QUESTION_OWNER)
+
+    except QuestionNotExists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
