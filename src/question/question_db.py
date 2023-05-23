@@ -1,5 +1,5 @@
 import itertools
-from sqlalchemy import select, update, insert, delete, text
+from sqlalchemy import select, update, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.models import question
 from question.schemas import QuestionRead, QuestionUpdate, QuestionCreate

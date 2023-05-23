@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_cache.decorator import cache
-from fastapi_users.openapi import OpenAPIResponseType
-from fastapi_users.router.common import ErrorModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
 from starlette import status
@@ -10,6 +8,7 @@ from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
+from quiz.docs import GET_QUIZ_RESPONSES
 from quiz.quiz_db import get_quiz_db
 from utils.custom_exceptions import QuestionsInvalidNumber
 from utils.error_code import ErrorCode
@@ -18,36 +17,6 @@ quiz_router = APIRouter(
     prefix="/quiz",
     tags=["Quiz"]
 )
-
-GET_QUIZ_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {
-                    ErrorCode.QUESTIONS_NUMBER_INVALID: {
-                        "summary": "Invalid number of questions",
-                        "value": {"detail": ErrorCode.QUESTIONS_NUMBER_INVALID},
-                    }
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
 
 
 # @cache(expire=60 * 10)
@@ -79,5 +48,3 @@ async def get_quiz(number_questions: int = 50, verified_user: User = Depends(cur
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
-
-

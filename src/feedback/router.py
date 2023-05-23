@@ -1,164 +1,26 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from fastapi_users.openapi import OpenAPIResponseType
-from fastapi_users.router.common import ErrorModel
-from sqlalchemy import insert, update, TIMESTAMP
+from sqlalchemy import insert, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
+from feedback.docs import ADD_FEEDBACK_QUESTION_RESPONSES, GET_FEEDBACK_SENT_RESPONSES, \
+    PATCH_FEEDBACK_QUESTION_RESPONSES
 from feedback.feedback_db import feedback_sent_db, feedback_received_db, feedback_by_id_db, \
     feedback_question_id_user_id_db, delete_feedback_id, get_remaining_time
 from feedback.models import feedback
 from feedback.schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
 from question.question_db import get_question_id_db
 from utils.custom_exceptions import FeedbackAlreadySent, QuestionNotExists, RatingException, DuplicatedTitle, \
-    InvalidPage, FeedbackNotExists, FeedbackNotEditable, UserNotAdminSupervisor, NotAllowedFeedbackYourself, \
-    NotAllowedDeleteFeedback, NotAllowedDeleteBeforeTime, NotAllowedPatchFeedback
+    InvalidPage, FeedbackNotExists, FeedbackNotEditable, UserNotAdminSupervisor, NotAllowedDeleteBeforeTime, NotAllowed
 from utils.error_code import ErrorCode
 
 feedback_router = APIRouter(
     prefix="/feedback",
     tags=["Feedback"],
 )
-
-ADD_FEEDBACK_QUESTION_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.RATING_EXCEPTION: {
-                    "summary": "Not valid rating",
-                    "value": {"detail": ErrorCode.RATING_EXCEPTION},
-                },
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-    status.HTTP_404_NOT_FOUND: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.QUESTION_NOT_EXISTS: {
-                    "summary": "Question not exists",
-                    "value": {"detail": ErrorCode.QUESTION_NOT_EXISTS},
-                }}
-            },
-        },
-    },
-    status.HTTP_409_CONFLICT: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.FEEDBACK_ALREADY_SENT: {
-                    "summary": "Feedback already sent",
-                    "value": {"detail": "You already send a feedback for this question, please wait 12 hours"},
-                }
-                }
-            }
-        }
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
-GET_FEEDBACK_SENT_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {
-                    ErrorCode.INVALID_PAGE: {
-                        "summary": "Invalid page",
-                        "value": {"detail": ErrorCode.INVALID_PAGE},
-                    }
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
-                    "summary": "Only supervisor or admin can receive feedback",
-                    "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
-PATCH_FEEDBACK_QUESTION_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.RATING_EXCEPTION: {
-                    "summary": "Not valid rating",
-                    "value": {"detail": ErrorCode.RATING_EXCEPTION},
-                },
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-    status.HTTP_404_NOT_FOUND: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.FEEDBACK_NOT_EXISTS: {
-                    "summary": "Feedback not exists",
-                    "value": {"detail": ErrorCode.FEEDBACK_NOT_EXISTS},
-                }}
-            },
-        },
-    },
-    status.HTTP_405_METHOD_NOT_ALLOWED: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.FEEDBACK_NOT_EDITABLE: {
-                    "summary": "You can't edit feedback now",
-                    "value": {"detail": "You can edit the feedback for 15 minutes after you sent it"},
-                }
-                }
-            }
-        }
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
 
 
 @feedback_router.post("/add", name="feedback:add feedback", dependencies=[Depends(HTTPBearer())],
@@ -177,7 +39,7 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
 
         else:
             if result_question[0]["added_by"] != verified_user.id:
-                raise NotAllowedFeedbackYourself
+                raise NotAllowed
 
         result = await feedback_question_id_user_id_db(question_id=added_feedback.question_id,
                                                        user_id=verified_user.id, session=session)
@@ -217,7 +79,7 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
     except QuestionNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
 
-    except NotAllowedFeedbackYourself:
+    except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
 
     except DuplicatedTitle:
@@ -300,7 +162,7 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
             raise QuestionNotExists
 
         if result[0]["user_id"] != verified_user.id and verified_user.id != 3:
-            raise NotAllowedPatchFeedback
+            raise NotAllowed
 
         remaining_time = await get_remaining_time(result[0]["added_at"], target_time=900)
         remaining_time = remaining_time // 60
@@ -343,7 +205,7 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
     except (FeedbackNotExists, QuestionNotExists):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
 
-    except NotAllowedPatchFeedback:
+    except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK)
 
     except FeedbackNotEditable:
@@ -367,13 +229,13 @@ async def delete_feedback(feedback_id: int, verified_user: User = Depends(curren
 
         else:
             if result[0]["user_id"] != verified_user.id and verified_user.id != 3:
-                raise NotAllowedDeleteFeedback
+                raise NotAllowed
 
             remaining_time = await get_remaining_time(result[0]["added_at"], target_time=3600 * 12)
             remaining_time = remaining_time // 3600
 
             if remaining_time > 0:
-                raise NotAllowedDeleteBeforeTime
+                raise NotAllowed
 
         await delete_feedback_id(feedback_id=feedback_id, session=session)
 
@@ -385,7 +247,7 @@ async def delete_feedback(feedback_id: int, verified_user: User = Depends(curren
     except FeedbackNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
 
-    except NotAllowedDeleteFeedback:
+    except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
 
     except NotAllowedDeleteBeforeTime:

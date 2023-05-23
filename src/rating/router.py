@@ -3,8 +3,6 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from fastapi_users.openapi import OpenAPIResponseType
-from fastapi_users.router.common import ErrorModel
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -12,10 +10,10 @@ from auth.base_config import current_user
 from auth.models import user, User
 from database import get_async_session
 from feedback.models import feedback
+from rating.docs import POST_RATING_RESPONSES
 from rating.models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
 from rating.schemas import RatingRead, RatingUpdate, RatingCreate
-from university.models import university
 from utils.custom_exceptions import QuestionsInvalidNumber, UserNotAdminSupervisor
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
@@ -24,36 +22,6 @@ rating_router = APIRouter(
     prefix="/rating",
     tags=["Rating"],
 )
-
-POST_RATING_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {
-                    ErrorCode.QUESTIONS_NUMBER_INVALID: {
-                        "summary": "Invalid number of questions",
-                        "value": {"detail": ErrorCode.QUESTIONS_NUMBER_INVALID},
-                    }
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
 
 
 @rating_router.get("/supervisor", name="supervisor:get best rating", dependencies=[Depends(HTTPBearer())])

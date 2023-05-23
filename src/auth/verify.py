@@ -5,56 +5,13 @@ from fastapi_users.router.common import ErrorModel
 from pydantic import EmailStr
 from starlette import status
 from fastapi import Request
+
+from auth.docs import REQUEST_VERIFY_EMAIL_RESPONSE, VERIFY_EMAIL_RESPONSE
 from auth.manager import get_user_manager
 from auth.schemas import UserRead
 from utils.error_code import ErrorCode
 
 verify_router = APIRouter()
-
-REQUEST_VERIFY_EMAIL_RESPONSE: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_INACTIVE: {
-                    "summary": "User is inactive.",
-                    "value": {"detail": ErrorCode.USER_INACTIVE},
-                }, ErrorCode.USER_NOT_EXISTS: {
-                    "summary": "User not exists with this email.",
-                    "value": {"detail": ErrorCode.USER_NOT_EXISTS},
-                },
-                    ErrorCode.VERIFY_USER_ALREADY_VERIFIED: {
-                        "summary": "The user is already verified.",
-                        "value": {
-                            "detail": ErrorCode.VERIFY_USER_ALREADY_VERIFIED
-                        },
-                    },
-                }
-            }
-        },
-    }
-}
-VERIFY_EMAIL_RESPONSE: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.VERIFY_USER_BAD_TOKEN: {
-                    "summary": "Invalid verify token or user with this email does not exists",
-                    "value": {"detail": ErrorCode.VERIFY_USER_BAD_TOKEN},
-                }
-                    ,
-                    ErrorCode.VERIFY_USER_ALREADY_VERIFIED: {
-                        "summary": "The user is already verified.",
-                        "value": {
-                            "detail": ErrorCode.VERIFY_USER_ALREADY_VERIFIED
-                        },
-                    },
-                }
-            }
-        },
-    }
-}
 
 
 @verify_router.post(

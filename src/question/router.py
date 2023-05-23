@@ -1,138 +1,25 @@
 from collections import Counter
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from fastapi_users.openapi import OpenAPIResponseType
-from fastapi_users.router.common import ErrorModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
 from auth.models import User
 from database import get_async_session
 from feedback.feedback_db import check_feedback_question_id, delete_feedback_question_id
+from question.docs import ADD_PATCH_QUESTION_RESPONSES, GET_QUESTION_RESPONSES, GET_QUESTION_SECTION_RESPONSES
 from question.schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from question.question_db import get_questions_id_db, get_questions_section_db, check_question_validity, \
     get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
     delete_question_db
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
-    AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, NotQuestionOwner, QuestionNotExists
+    AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, QuestionNotExists, NotAllowed
 from utils.error_code import ErrorCode
 
 question_router = APIRouter(
     prefix="/question",
     tags=["Question"],
 )
-
-ADD_PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES: {
-                    "summary": "Not valid question formula",
-                    "value": {"detail": ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES},
-                },
-                    ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR: {
-                        "summary": "Number of choices not equal to four",
-                        "value": {"detail": ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR},
-                    },
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
-                    "summary": "Only supervisor or admin can enter or patch quizzes",
-                    "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-    status.HTTP_409_CONFLICT: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.QUESTION_DUPLICATED: {
-                    "summary": "Quiz duplicated, you've entered same question with same choices and answer",
-                    "value": {"detail": ErrorCode.QUESTION_DUPLICATED},
-                }
-                }
-            }
-        }
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
-
-GET_QUESTION_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {
-                    ErrorCode.INVALID_PAGE: {
-                        "summary": "Invalid page",
-                        "value": {"detail": ErrorCode.INVALID_PAGE},
-                    }
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
-
-GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
-    status.HTTP_400_BAD_REQUEST: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.OUT_OF_SECTION_ID: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": ErrorCode.OUT_OF_SECTION_ID},
-                },
-                    ErrorCode.INVALID_PAGE: {
-                        "summary": "Invalid page",
-                        "value": {"detail": ErrorCode.INVALID_PAGE},
-                    }
-                }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
-}
 
 
 @question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
@@ -143,10 +30,10 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
 
         await check_question_validity(received_question=added_question, role_id=verified_user.role_id)
 
-        questions_same_question_title = await get_questions_title_db(question_title=added_question.question_title,
-                                                                     session=session)
+        questions_with_same_title = await get_questions_title_db(question_title=added_question.question_title,
+                                                                 session=session)
 
-        for element in questions_same_question_title:
+        for element in questions_with_same_title:
             # checking if duplicated
             if (Counter(element["choices"]), element["question_title"]) == (Counter(added_question.choices),
                                                                             added_question.question_title):
@@ -291,16 +178,16 @@ async def delete_question(question_id: int, verified_user: User = Depends(curren
 
         check_feedback = await check_feedback_question_id(question_id=question_id, session=session)
 
-        if check_feedback:
-            await delete_feedback_question_id(question_id=question_id, session=session)
-
         question_for_deleting = await get_question_id_db(question_id=question_id, session=session)
+
+        if question_for_deleting[0]["added_by"] != verified_user.id:
+            raise NotAllowed
 
         if not question_for_deleting:
             raise QuestionNotExists
 
-        if question_for_deleting and question_for_deleting[0]["added_by"] != verified_user.id:
-            raise NotQuestionOwner
+        if check_feedback:
+            await delete_feedback_question_id(question_id=question_id, session=session)
 
         await delete_question_db(question_id=question_id, session=session)
 
@@ -309,7 +196,7 @@ async def delete_question(question_id: int, verified_user: User = Depends(curren
                 "details": None
                 }
 
-    except NotQuestionOwner:
+    except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_QUESTION_OWNER)
 
     except QuestionNotExists:
