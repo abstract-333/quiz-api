@@ -71,3 +71,8 @@ class NotAllowed(Exception):
 class NotAllowedDeleteBeforeTime(Exception):
     """NOT_ALLOWED_DELETE_BEFORE_TIME"""
     pass
+
+
+class NotUser(Exception):
+    """ONLY_USER_IS_ALLOWED"""
+    pass

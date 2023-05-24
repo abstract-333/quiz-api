@@ -4,6 +4,13 @@ from starlette import status
 
 from utils.error_code import ErrorCode
 
+
+SERVER_ERROR_RESPONSE: OpenAPIResponseType = {
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
+}
+
 POST_RATING_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
         "model": ErrorModel,
@@ -22,10 +29,14 @@ POST_RATING_RESPONSES: OpenAPIResponseType = {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
+                "examples": {ErrorCode.ONLY_USER: {
+                    "summary": "Only user can have rating",
+                    "value": {"detail": ErrorCode.ONLY_USER},
+                }, ErrorCode.USER_NOT_AUTHENTICATED: {
                     "summary": "Not authenticated",
                     "value": {"detail": "Not authenticated"},
-                }}
+                }
+                }
             },
         },
     },

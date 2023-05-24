@@ -10,11 +10,11 @@ from auth.base_config import current_user
 from auth.auth_models import user, User
 from database import get_async_session
 from feedback.feedback_models import feedback
-from rating.rating_docs import POST_RATING_RESPONSES
+from rating.rating_docs import POST_RATING_RESPONSES, SERVER_ERROR_RESPONSE
 from rating.rating_models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
 from rating.rating_schemas import RatingRead, RatingUpdate, RatingCreate
-from utils.custom_exceptions import QuestionsInvalidNumber, UserNotAdminSupervisor
+from utils.custom_exceptions import QuestionsInvalidNumber, UserNotAdminSupervisor, NotUser
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
 
@@ -24,7 +24,8 @@ rating_router = APIRouter(
 )
 
 
-@rating_router.get("/supervisor", name="supervisor:get best rating", dependencies=[Depends(HTTPBearer())])
+@rating_router.get("/supervisor", name="supervisor:get best rating", dependencies=[Depends(HTTPBearer())],
+                   responses=SERVER_ERROR_RESPONSE)
 async def add_feedback(verified_user: User = Depends(current_user)
                        , session: AsyncSession = Depends(get_async_session)):
     try:
@@ -48,7 +49,8 @@ async def add_feedback(verified_user: User = Depends(current_user)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@rating_router.get("/student", name="student:get best rating", dependencies=[Depends(HTTPBearer())])
+@rating_router.get("/student", name="student:get best rating", dependencies=[Depends(HTTPBearer())],
+                   responses=SERVER_ERROR_RESPONSE)
 async def get_rating_students(verified_user: User = Depends(current_user)
                               , session: AsyncSession = Depends(get_async_session)):
     try:
@@ -69,7 +71,8 @@ async def get_rating_students(verified_user: User = Depends(current_user)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@rating_router.get("/student/me", name="student:get rating", dependencies=[Depends(HTTPBearer())])
+@rating_router.get("/student/me", name="student:get rating", dependencies=[Depends(HTTPBearer())],
+                   responses=SERVER_ERROR_RESPONSE)
 async def get_rating_me(verified_user: User = Depends(current_user),
                         session: AsyncSession = Depends(get_async_session)):
     try:
@@ -90,7 +93,7 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
                      session: AsyncSession = Depends(get_async_session)):
     try:
         if verified_user.role_id != 1:
-            raise UserNotAdminSupervisor
+            raise NotUser
 
         if rating_read.solved > rating_read.questions_number:
             raise QuestionsInvalidNumber
@@ -125,12 +128,12 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
                     "data": None,
                     "detail": None
                     }
-    except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
 
     except QuestionsInvalidNumber:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
 
+    except NotUser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.ONLY_USER)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
