@@ -126,6 +126,12 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
         question_old = await get_question_id_db(question_id=question_id, session=session)
 
+        if not question_old:
+            raise QuestionNotExists
+
+        if question_old[0]["added_by"] != verified_user.id and verified_user.role_id != 3:
+            raise NotAllowed
+
         if (Counter(question_old[0]["choices"]), question_old[0]["question_title"], question_old[0]["answer"]) == (
                 Counter(edited_question.choices), edited_question.question_title,
                 edited_question.answer):
@@ -155,14 +161,20 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                 "details": None
                 }
 
-    except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
-
     except NumberOfChoicesNotFour:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR)
 
     except AnswerNotIncluded:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
+
+    except NotAllowed:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_QUESTION_OWNER)
+    
+    except UserNotAdminSupervisor:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+
+    except QuestionNotExists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
 
     except DuplicatedQuestionException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)

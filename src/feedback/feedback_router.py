@@ -38,7 +38,7 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
             raise QuestionNotExists
 
         else:
-            if result_question[0]["added_by"] != verified_user.id:
+            if result_question[0]["added_by"] == verified_user.id:
                 raise NotAllowed
 
         result = await feedback_question_id_user_id_db(question_id=added_feedback.question_id,
