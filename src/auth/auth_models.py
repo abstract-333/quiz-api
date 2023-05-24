@@ -22,7 +22,7 @@ user = Table(
     Column("id", Integer, primary_key=True),
     Column("email", String(length=50), nullable=False, index=True, unique=True),
     Column("username", String(length=25), nullable=False),
-    Column("role_id", Integer, ForeignKey(role.c.id)),
+    Column("role_id", Integer, ForeignKey(role.c.id), nullable=False),
     Column("university_id", Integer, ForeignKey(university.c.id), nullable=True),
     Column("section_id", Integer, ForeignKey(section.c.id), nullable=True),
     Column("phone", String(length=10), nullable=True),

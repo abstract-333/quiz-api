@@ -216,7 +216,7 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@feedback_router.delete("/{feedback_id}", name="feedback:delete feedback",
+@feedback_router.delete("/", name="feedback:delete feedback",
                         dependencies=[Depends(HTTPBearer())], )
 async def delete_feedback(feedback_id: int, verified_user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_async_session)):

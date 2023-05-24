@@ -171,7 +171,7 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.delete("/{question_id}", name="question: delete question", dependencies=[Depends(HTTPBearer())], )
+@question_router.delete("/", name="question: delete question", dependencies=[Depends(HTTPBearer())], )
 async def delete_question(question_id: int, verified_user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
