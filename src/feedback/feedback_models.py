@@ -14,7 +14,7 @@ feedback = Table(
     Column("id", Integer, primary_key=True),
     Column("rating", SMALLINT(unsigned=True), nullable=False),
     Column("feedback_title", String(length=255), nullable=True),
-    Column("added_at", TIMESTAMP, default=datetime.utcnow),
+    Column("added_at", TIMESTAMP, default=datetime.utcnow, nullable=False),
     Column("user_id", Integer, ForeignKey(user.c.id), nullable=False),
     Column("question_id", Integer, ForeignKey(question.c.id), nullable=False),
     Column("question_author_id", Integer, ForeignKey(user.c.id), nullable=False)

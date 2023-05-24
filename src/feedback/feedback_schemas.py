@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey
+from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey, null
 from sqlalchemy.dialects.mysql import SMALLINT
 
 from auth.auth_models import user
@@ -34,7 +34,7 @@ class Feedback(Base):
     id = Column(Integer, primary_key=True)
     rating = Column(SMALLINT(unsigned=True), nullable=False)
     feedback_title = Column(String(length=255), nullable=False)
-    added_at = Column(TIMESTAMP, default=datetime.utcnow)
+    added_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
     user_id = Column(Integer, ForeignKey(user.c.id), nullable=False)
     question_id = Column(Integer, ForeignKey(question.c.id), nullable=False)
     question_author_id = Column(Integer, ForeignKey(user.c.id), nullable=False)
