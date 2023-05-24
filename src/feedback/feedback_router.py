@@ -6,8 +6,8 @@ from starlette import status
 from auth.base_config import current_user
 from auth.auth_models import User
 from database import get_async_session
-from feedback.feedback_docs import ADD_FEEDBACK_QUESTION_RESPONSES, GET_FEEDBACK_SENT_RESPONSES, \
-    PATCH_FEEDBACK_QUESTION_RESPONSES
+from feedback.feedback_docs import ADD_FEEDBACK_RESPONSES, GET_FEEDBACK_SENT_RESPONSES, \
+    PATCH_FEEDBACK_RESPONSES, GET_FEEDBACK_RECEIVED_RESPONSES, DELETE_FEEDBACK_RESPONSES
 from feedback.feedback_db import feedback_sent_db, feedback_received_db, feedback_by_id_db, \
     feedback_question_id_user_id_db, delete_feedback_id, get_remaining_time
 from feedback.feedback_models import feedback
@@ -24,10 +24,9 @@ feedback_router = APIRouter(
 
 
 @feedback_router.post("/add", name="feedback:add feedback", dependencies=[Depends(HTTPBearer())],
-                      responses=ADD_FEEDBACK_QUESTION_RESPONSES)
+                      responses=ADD_FEEDBACK_RESPONSES)
 async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)):
-
     try:
 
         if added_feedback.rating not in (1, 2, 3, 4, 5):
@@ -80,16 +79,14 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
     except FeedbackAlreadySent:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"You already send a feedback for this question, please wait {remaining_time} hours")
-    except QuestionNotExists:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
-
     except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
 
+    except QuestionNotExists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
+
     except DuplicatedTitle:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.DUPLICATED_TITLE)
-
-
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -118,7 +115,7 @@ async def get_sent_feedback(page: int = 1, verified_user: User = Depends(current
 
 
 @feedback_router.get("/get/received", name="feedback:get received feedback", dependencies=[Depends(HTTPBearer())],
-                     responses=GET_FEEDBACK_SENT_RESPONSES)
+                     responses=GET_FEEDBACK_RECEIVED_RESPONSES)
 async def get_sent_received(page: int = 1, verified_user: User = Depends(current_user),
                             session: AsyncSession = Depends(get_async_session)):
     try:
@@ -146,7 +143,7 @@ async def get_sent_received(page: int = 1, verified_user: User = Depends(current
 
 
 @feedback_router.patch("/patch", name="feedback:patch feedback", dependencies=[Depends(HTTPBearer())],
-                       responses=PATCH_FEEDBACK_QUESTION_RESPONSES)
+                       responses=PATCH_FEEDBACK_RESPONSES)
 async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, verified_user: User = Depends(current_user),
                          session: AsyncSession = Depends(get_async_session)):
     try:
@@ -204,11 +201,11 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
     except RatingException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.RATING_EXCEPTION)
 
-    except (FeedbackNotExists, QuestionNotExists):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
-
     except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK)
+
+    except (FeedbackNotExists, QuestionNotExists):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
 
     except FeedbackNotEditable:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -219,7 +216,7 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
 
 
 @feedback_router.delete("/delete", name="feedback:delete feedback",
-                        dependencies=[Depends(HTTPBearer())], )
+                        dependencies=[Depends(HTTPBearer())], responses=DELETE_FEEDBACK_RESPONSES)
 async def delete_feedback(feedback_id: int, verified_user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_async_session)):
     try:
@@ -246,11 +243,11 @@ async def delete_feedback(feedback_id: int, verified_user: User = Depends(curren
                 "detail": None
                 }
 
-    except FeedbackNotExists:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
-
     except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
+
+    except FeedbackNotExists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
 
     except NotAllowedDeleteBeforeTime:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
