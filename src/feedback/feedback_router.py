@@ -27,6 +27,7 @@ feedback_router = APIRouter(
                       responses=ADD_FEEDBACK_QUESTION_RESPONSES)
 async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)):
+
     try:
 
         if added_feedback.rating not in (1, 2, 3, 4, 5):
@@ -76,6 +77,9 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
     except RatingException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.RATING_EXCEPTION)
 
+    except FeedbackAlreadySent:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"You already send a feedback for this question, please wait {remaining_time} hours")
     except QuestionNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
 
@@ -85,9 +89,7 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
     except DuplicatedTitle:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.DUPLICATED_TITLE)
 
-    except FeedbackAlreadySent:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"You already send a feedback for this question, please wait {remaining_time} hours")
+
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -151,26 +153,26 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
         if edited_feedback.rating not in (1, 2, 3, 4, 5):
             raise RatingException
 
-        result = await feedback_by_id_db(feedback_id=feedback_id, session=session)
+        feedback_result = await feedback_by_id_db(feedback_id=feedback_id, session=session)
 
-        if not result:
+        if not feedback_result:
             raise FeedbackNotExists
 
-        question_result = await get_question_id_db(question_id=result[0]["question_id"], session=session)
+        question_result = await get_question_id_db(question_id=feedback_result[0]["question_id"], session=session)
 
         if not question_result:
             raise QuestionNotExists
 
-        if result[0]["user_id"] != verified_user.id and verified_user.id != 3:
+        if feedback_result[0]["user_id"] != verified_user.id and verified_user.id != 3:
             raise NotAllowed
 
-        remaining_time = await get_remaining_time(result[0]["added_at"], target_time=900)
+        remaining_time = await get_remaining_time(feedback_result[0]["added_at"], target_time=900)
         remaining_time = remaining_time // 60
 
         if abs(remaining_time) > 15:
             raise FeedbackNotEditable
 
-        for row in result:
+        for row in feedback_result:
             if row["feedback_title"] == edited_feedback.feedback_title and row["rating"] == edited_feedback.rating:
                 returned_object = FeedbackCreate(rating=row["rating"],
                                                  feedback_title=row["feedback_title"],
@@ -185,8 +187,8 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
 
         feedback_create = FeedbackCreate(rating=edited_feedback.rating,
                                          feedback_title=edited_feedback.feedback_title,
-                                         user_id=result[0]["user_id"],
-                                         question_id=result[0]["question_id"],
+                                         user_id=feedback_result[0]["user_id"],
+                                         question_id=feedback_result[0]["question_id"],
                                          question_author_id=question_result[0]["question_author_id"]
                                          )
 
@@ -216,22 +218,22 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@feedback_router.delete("/", name="feedback:delete feedback",
+@feedback_router.delete("/delete", name="feedback:delete feedback",
                         dependencies=[Depends(HTTPBearer())], )
 async def delete_feedback(feedback_id: int, verified_user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_async_session)):
     try:
 
-        result = await feedback_by_id_db(feedback_id=feedback_id, session=session)
+        feedback_result = await feedback_by_id_db(feedback_id=feedback_id, session=session)
 
-        if not result:
+        if not feedback_result:
             raise FeedbackNotExists
 
         else:
-            if result[0]["user_id"] != verified_user.id and verified_user.id != 3:
+            if feedback_result[0]["user_id"] != verified_user.id and verified_user.id != 3:
                 raise NotAllowed
 
-            remaining_time = await get_remaining_time(result[0]["added_at"], target_time=3600 * 12)
+            remaining_time = await get_remaining_time(feedback_result[0]["added_at"], target_time=3600 * 12)
             remaining_time = remaining_time // 3600
 
             if remaining_time > 0:

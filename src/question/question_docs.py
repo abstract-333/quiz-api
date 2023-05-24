@@ -4,7 +4,7 @@ from starlette import status
 
 from utils.error_code import ErrorCode
 
-ADD_PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
+ADD_QUESTION_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
         "model": ErrorModel,
         "content": {
@@ -34,6 +34,68 @@ ADD_PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
                 }}
             },
         },
+    },
+    status.HTTP_409_CONFLICT: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.QUESTION_DUPLICATED: {
+                    "summary": "Quiz duplicated, you've entered same question with same choices and answer",
+                    "value": {"detail": ErrorCode.QUESTION_DUPLICATED},
+                }
+                }
+            }
+        }
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
+}
+PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
+    status.HTTP_400_BAD_REQUEST: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES: {
+                    "summary": "Not valid question formula",
+                    "value": {"detail": ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES},
+                },
+                    ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR: {
+                        "summary": "Number of choices not equal to four",
+                        "value": {"detail": ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR},
+                    },
+                }
+            },
+        },
+    },
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.NOT_QUESTION_OWNER: {
+                    "summary": "Only question writer can patch it",
+                    "value": {"detail": ErrorCode.NOT_QUESTION_OWNER},
+                }, ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
+                    "summary": "Only supervisor or admin can enter or patch quizzes",
+                    "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
+                }, ErrorCode.USER_NOT_AUTHENTICATED: {
+                    "summary": "Not authenticated",
+                    "value": {"detail": "Not authenticated"},
+                }}
+            },
+        },
+    },
+    status.HTTP_404_NOT_FOUND: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.QUESTION_NOT_EXISTS: {
+                    "summary": "Question not exists",
+                    "value": {"detail": ErrorCode.QUESTION_NOT_EXISTS},
+                }
+                }
+            }
+        }
     },
     status.HTTP_409_CONFLICT: {
         "model": ErrorModel,
@@ -116,3 +178,36 @@ GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
     }
 }
 
+DELETE_QUESTION_RESPONSES: OpenAPIResponseType = {
+
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.NOT_QUESTION_OWNER: {
+                    "summary": "Only question writer can delete it",
+                    "value": {"detail": ErrorCode.NOT_QUESTION_OWNER},
+                }, ErrorCode.USER_NOT_AUTHENTICATED: {
+                    "summary": "Not authenticated",
+                    "value": {"detail": "Not authenticated"},
+                }
+                }
+            },
+        },
+    },
+    status.HTTP_404_NOT_FOUND: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.QUESTION_NOT_EXISTS: {
+                    "summary": "Question not exists",
+                    "value": {"detail": ErrorCode.QUESTION_NOT_EXISTS},
+                }
+                }
+            }
+        }
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
+}

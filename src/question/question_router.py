@@ -7,7 +7,8 @@ from auth.base_config import current_user
 from auth.auth_models import User
 from database import get_async_session
 from feedback.feedback_db import check_feedback_question_id, delete_feedback_question_id
-from question.question_docs import ADD_PATCH_QUESTION_RESPONSES, GET_QUESTION_RESPONSES, GET_QUESTION_SECTION_RESPONSES
+from question.question_docs import ADD_QUESTION_RESPONSES, GET_QUESTION_RESPONSES, GET_QUESTION_SECTION_RESPONSES, \
+    PATCH_QUESTION_RESPONSES, DELETE_QUESTION_RESPONSES
 from question.question_schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from question.question_db import get_questions_id_db, get_questions_section_db, check_question_validity, \
     get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
@@ -23,7 +24,7 @@ question_router = APIRouter(
 
 
 @question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
-                      responses=ADD_PATCH_QUESTION_RESPONSES)
+                      responses=ADD_QUESTION_RESPONSES)
 async def add_question(added_question: QuestionRead, verified_user: User = Depends(current_user),
                        session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
@@ -53,14 +54,14 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
                 "detail": None
                 }
 
-    except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
-
     except NumberOfChoicesNotFour:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR)
 
     except AnswerNotIncluded:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
+
+    except UserNotAdminSupervisor:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
 
     except DuplicatedQuestionException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
@@ -117,7 +118,7 @@ async def get_question_section_id(section_id: int, page: int = 1,
 
 
 @question_router.patch("/patch", name="question: patch question", dependencies=[Depends(HTTPBearer())],
-                       responses=ADD_PATCH_QUESTION_RESPONSES)
+                       responses=PATCH_QUESTION_RESPONSES)
 async def patch_question(question_id: int, edited_question: QuestionRead, verified_user: User = Depends(current_user),
                          session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
@@ -183,7 +184,8 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.delete("/", name="question: delete question", dependencies=[Depends(HTTPBearer())], )
+@question_router.delete("/delete", name="question: delete question", dependencies=[Depends(HTTPBearer())],
+                        responses=DELETE_QUESTION_RESPONSES)
 async def delete_question(question_id: int, verified_user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
