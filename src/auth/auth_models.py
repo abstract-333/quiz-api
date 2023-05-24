@@ -23,7 +23,7 @@ user = Table(
     Column("email", String(length=50), nullable=False, index=True, unique=True),
     Column("username", String(length=25), nullable=False),
     Column("role_id", Integer, ForeignKey(role.c.id), nullable=False),
-    Column("university_id", Integer, ForeignKey(university.c.id), nullable=True),
+    Column("university_id", Integer, ForeignKey(university.c.id), nullable=False),
     Column("section_id", Integer, ForeignKey(section.c.id), nullable=True),
     Column("phone", String(length=10), nullable=True),
     Column("registered_at", TIMESTAMP, default=datetime.utcnow),
@@ -42,7 +42,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     role_id = Column(Integer, ForeignKey(role.c.id))
     section_id = Column(Integer, ForeignKey(section.c.id), nullable=True)
     phone = Column(String(length=10), nullable=True)
-    university_id = Column(Integer, ForeignKey(university.c.id), nullable=True)
+    university_id = Column(Integer, ForeignKey(university.c.id), nullable=False)
     registered_at = Column(TIMESTAMP, default=datetime.utcnow())
     hashed_password: Mapped[str] = mapped_column(String(length=128), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
