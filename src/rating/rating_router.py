@@ -14,7 +14,7 @@ from rating.rating_docs import POST_RATING_RESPONSES, SERVER_ERROR_RESPONSE
 from rating.rating_models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
 from rating.rating_schemas import RatingRead, RatingUpdate, RatingCreate
-from utils.custom_exceptions import QuestionsInvalidNumber, UserNotAdminSupervisor, NotUser
+from utils.custom_exceptions import QuestionsInvalidNumber, NotUser
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
 
@@ -50,6 +50,29 @@ async def add_feedback(verified_user: User = Depends(current_user)
 
 
 @rating_router.get("/student", name="student:get best rating", dependencies=[Depends(HTTPBearer())],
+                   responses=SERVER_ERROR_RESPONSE)
+async def get_rating_students(verified_user: User = Depends(current_user)
+                              , session: AsyncSession = Depends(get_async_session)):
+    try:
+        query = select(
+            user.c.username,
+            rating.c.questions_number, rating.c.solved) \
+            .join_from(rating, user, rating.c.user_id == user.c.id). \
+            order_by(desc(rating.c.solved)) \
+            .limit(10)
+
+        result_proxy = await session.execute(query)
+
+        result = ResultIntoList(result_proxy=result_proxy)
+        result = list(itertools.chain(result.parse()))
+
+        return result
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
+@rating_router.get("/student-university", name="student:get best rating-university",
+                   dependencies=[Depends(HTTPBearer())],
                    responses=SERVER_ERROR_RESPONSE)
 async def get_rating_students(verified_user: User = Depends(current_user)
                               , session: AsyncSession = Depends(get_async_session)):

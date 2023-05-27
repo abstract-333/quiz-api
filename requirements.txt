@@ -94,3 +94,4 @@ gunicorn
 fastapi_profiler
 sqladmin
 numpy
+fastapi-limiter

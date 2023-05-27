@@ -33,6 +33,11 @@ class QuestionNotExists(Exception):
     pass
 
 
+class QuestionNotEditable(Exception):
+    """NOT_ALLOWED_EDIT_QUESTION"""
+    pass
+
+
 class QuestionsInvalidNumber(Exception):
     """QUESTIONS_INVALID_NUMBER"""
     pass

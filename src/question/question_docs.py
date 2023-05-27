@@ -97,6 +97,19 @@ PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
             }
         }
     },
+
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.QUESTION_NOT_EDITABLE: {
+                    "summary": "You can't edit question now",
+                    "value": {"detail": "You can edit the question for 30 minutes after you sent it"},
+                }
+                }
+            }
+        }
+    },
     status.HTTP_409_CONFLICT: {
         "model": ErrorModel,
         "content": {

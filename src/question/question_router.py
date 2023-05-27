@@ -6,15 +6,16 @@ from starlette import status
 from auth.base_config import current_user
 from auth.auth_models import User
 from database import get_async_session
-from feedback.feedback_db import check_feedback_question_id, delete_feedback_question_id
+from feedback.feedback_db import check_feedback_question_id, delete_feedback_question_id, get_remaining_time
 from question.question_docs import ADD_QUESTION_RESPONSES, GET_QUESTION_RESPONSES, GET_QUESTION_SECTION_RESPONSES, \
     PATCH_QUESTION_RESPONSES, DELETE_QUESTION_RESPONSES
 from question.question_schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from question.question_db import get_questions_id_db, get_questions_section_db, check_question_validity, \
     get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
-    delete_question_db
+    delete_question_db, get_question_ref
+from rating.rating_docs import SERVER_ERROR_RESPONSE
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
-    AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, QuestionNotExists, NotAllowed
+    AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, QuestionNotExists, NotAllowed, QuestionNotEditable
 from utils.error_code import ErrorCode
 
 question_router = APIRouter(
@@ -43,6 +44,8 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
         question_create = QuestionCreate(question_title=added_question.question_title,
                                          choices=list(added_question.choices),  # converting set to list
                                          answer=added_question.answer,
+                                         reference=added_question.reference,
+                                         reference_link=added_question.reference_link,
                                          added_by=verified_user.id,
                                          section_id=verified_user.section_id
                                          )
@@ -133,9 +136,16 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         if question_old[0]["added_by"] != verified_user.id and verified_user.role_id != 3:
             raise NotAllowed
 
-        if (Counter(question_old[0]["choices"]), question_old[0]["question_title"], question_old[0]["answer"]) == (
+        remaining_time = await get_remaining_time(question_old[0]["added_at"], target_time=1800)
+        remaining_time = remaining_time // 60
+
+        if abs(remaining_time) > 15:
+            raise QuestionNotEditable
+
+        if (Counter(question_old[0]["choices"]), question_old[0]["question_title"], question_old[0]["answer"],
+            question_old[0]["reference"], question_old[0]["reference_link"]) == (
                 Counter(edited_question.choices), edited_question.question_title,
-                edited_question.answer):
+                edited_question.answer, edited_question.reference, edited_question.reference_link):
             return {"status": "success",
                     "data": edited_question,
                     "details": None
@@ -146,15 +156,19 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                                                    session=session)
 
         for element in result:
-            if (Counter(element["choices"]), element["question_title"], element["answer"]) == (
+            if (Counter(element["choices"]), element["question_title"], element["answer"], element["reference"],
+                element["reference_link"]) == (
                     Counter(edited_question.choices), edited_question.question_title,
-                    edited_question.answer):
+                    edited_question.answer, edited_question.reference, edited_question.reference_link):
                 raise DuplicatedQuestionException
 
         question_update = QuestionUpdate(question_title=edited_question.question_title,
                                          choices=list(edited_question.choices),
                                          answer=edited_question.answer,
+                                         reference=edited_question.reference,
+                                         reference_link=edited_question.reference_link,
                                          )
+
         await update_question_db(question_id=question_id, question_update=question_update, session=session)
 
         return {"status": "success",
@@ -170,15 +184,36 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
     except NotAllowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_QUESTION_OWNER)
-    
+
     except UserNotAdminSupervisor:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
 
     except QuestionNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
 
+    except QuestionNotEditable:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                            detail="You can edit the question for 30 minutes after you sent it")
+
     except DuplicatedQuestionException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
+
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
+@question_router.post("/wrong_solved/ref", name="question: get reference", dependencies=[Depends(HTTPBearer())],
+                      responses=SERVER_ERROR_RESPONSE)
+async def delete_question(list_question_id: list, verified_user: User = Depends(current_user),
+                          session: AsyncSession = Depends(get_async_session)) -> dict:
+    try:
+
+        questions = await get_question_ref(list_questions=list_question_id, session=session)
+
+        return {"status": "success",
+                "data": questions,
+                "details": None
+                }
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

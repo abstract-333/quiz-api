@@ -11,7 +11,7 @@ class UserRead(schemas.BaseUser[int]):
     email: str
     role_id: int
     phone: Optional[str]
-    university_id: Optional[int]
+    university_id: int
     section_id: Optional[int]
     is_active: bool = True
     is_superuser: bool = False
@@ -27,7 +27,7 @@ class UserCreate(schemas.BaseUserCreate):
     password: str
     role_id: int
     phone: Optional[str]
-    university_id: Optional[int]
+    university_id: int
     section_id: Optional[int]
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
@@ -39,7 +39,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     phone: str
     role_id: int
     phone: Optional[str]
-    university_id: Optional[int]
+    university_id: int
     section_id: Optional[int]
     is_active: Optional[bool]
     is_superuser: Optional[bool]

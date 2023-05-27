@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey, null
+from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey
 from sqlalchemy.dialects.mysql import SMALLINT
 
 from auth.auth_models import user

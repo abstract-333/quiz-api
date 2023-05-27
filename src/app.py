@@ -1,3 +1,4 @@
+from fastapi_limiter import FastAPILimiter
 from fastapi_profiler import PyInstrumentProfilerMiddleware
 from sqladmin import Admin
 from admin.admin_auth import AdminAuth
@@ -30,6 +31,7 @@ admin = Admin(app=app, engine=engine, authentication_backend=authentication_back
 async def startup():
     redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    await FastAPILimiter.init(redis, prefix="fastapi-cache")
 
 
 admin.add_view(UserAdmin)

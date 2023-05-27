@@ -1,5 +1,5 @@
 import itertools
-from sqlalchemy import select, update, insert, delete
+from sqlalchemy import select, update, insert, delete, Null
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.question_models import question
 from question.question_schemas import QuestionRead, QuestionUpdate, QuestionCreate
@@ -106,3 +106,13 @@ async def delete_question_db(question_id: int, session: AsyncSession):
     await session.execute(stmt)
     await session.commit()
 
+
+async def get_question_ref(list_questions: list, session: AsyncSession):
+    # get references of questions by id
+    query = select(question).where(question.c.id.in_(list_questions), question.c.reference_link != "")
+
+    result_proxy = await session.execute(query)
+    result = ResultIntoList(result_proxy=result_proxy)
+    result = list(itertools.chain(result.parse()))
+
+    return result
