@@ -5,6 +5,7 @@ from fastapi_cache.decorator import cache
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+
 from auth.auth_models import university
 from database import get_async_session
 from rating.rating_docs import SERVER_ERROR_RESPONSE

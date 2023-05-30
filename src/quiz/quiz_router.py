@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi_cache.decorator import cache
@@ -23,12 +22,11 @@ quiz_router = APIRouter(
 )
 
 
-@cache(expire=60 * 10)
+@cache(expire=60 * 100)
 @quiz_router.get("/get", name="quiz:get quiz",
-                 dependencies=[Depends(HTTPBearer()), Depends(RateLimiter(times=1, seconds=2))],
-                 responses=GET_QUIZ_RESPONSES)
-async def get_quiz(request: Request, response: Response, number_questions: int = 50, verified_user: User = Depends(current_user),
-                   session: AsyncSession = Depends(get_async_session)):
+                 dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
+async def get_quiz(request: Request, response: Response, number_questions: int = 50,
+                   verified_user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     try:
         if number_questions not in range(10, 51):
             raise QuestionsInvalidNumber

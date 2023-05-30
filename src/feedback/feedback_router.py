@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
+from fastapi_limiter.depends import RateLimiter
 from sqlalchemy import insert, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -20,6 +21,7 @@ from utils.error_code import ErrorCode
 feedback_router = APIRouter(
     prefix="/feedback",
     tags=["Feedback"],
+    # dependencies=[Depends(RateLimiter(times=1, seconds=2))]
 )
 
 

@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
+from fastapi_limiter.depends import RateLimiter
+
 from auth.base_config import fastapi_users, auth_backend
 from auth.auth_reset_password import reset_password_router
 from auth.auth_schemas import UserRead, UserCreate, UserUpdate
@@ -8,6 +10,7 @@ from auth.auth_verify import verify_router
 auth_router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
+    # dependencies=[Depends(RateLimiter(times=1, seconds=2))]
 )
 
 auth_router.include_router(
