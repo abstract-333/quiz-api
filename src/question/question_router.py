@@ -22,7 +22,6 @@ from utils.error_code import ErrorCode
 question_router = APIRouter(
     prefix="/question",
     tags=["Question"],
-    # dependencies=[Depends(RateLimiter(times=1, seconds=2))]
 )
 
 

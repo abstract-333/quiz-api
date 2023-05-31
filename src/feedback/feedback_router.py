@@ -21,7 +21,6 @@ from utils.error_code import ErrorCode
 feedback_router = APIRouter(
     prefix="/feedback",
     tags=["Feedback"],
-    # dependencies=[Depends(RateLimiter(times=1, seconds=2))]
 )
 
 
