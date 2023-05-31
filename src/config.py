@@ -13,3 +13,5 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 SMTP_USER = os.environ.get("SMTP_USER")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+
+API_KEY = os.environ.get("API_KEY")

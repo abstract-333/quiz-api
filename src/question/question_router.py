@@ -102,6 +102,7 @@ async def get_question_section_id(section_id: int, page: int = 1,
         if page < 1:
             raise InvalidPage
 
+        # TODO
         if section_id not in (1, 2, 3):
             raise OutOfSectionIdException
 

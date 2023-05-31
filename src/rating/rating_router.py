@@ -14,6 +14,7 @@ from rating.rating_docs import POST_RATING_RESPONSES, SERVER_ERROR_RESPONSE
 from rating.rating_models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
 from rating.rating_schemas import RatingRead, RatingUpdate, RatingCreate
+from university.university_models import university
 from utils.custom_exceptions import QuestionsInvalidNumber, NotUser
 from utils.error_code import ErrorCode
 from utils.result_into_list import ResultIntoList
@@ -33,11 +34,11 @@ async def add_feedback(verified_user: User = Depends(current_user)
             user.c.username,
             (func.sum(feedback.c.rating) / func.count(feedback.c.id)).label('average_rating'),
             func.count(feedback.c.id).label('count_of_rates')) \
-            .join(feedback, user.c.id == feedback.c.question_author_id). \
-            order_by(desc((func.sum(feedback.c.rating) / func.count(feedback.c.id)))) \
+            .join(feedback, user.c.id == feedback.c.question_author_id) \
             .group_by(feedback.c.question_author_id). \
-            having((func.sum(feedback.c.rating) / func.count(feedback.c.id)) > 2.5). \
-            limit(10)
+            having((func.sum(feedback.c.rating) / func.count(feedback.c.id)) > 2.5) \
+            .order_by(desc((func.sum(feedback.c.rating) / func.count(feedback.c.id)))) \
+            .limit(10)
 
         result_proxy = await session.execute(query)
 
@@ -55,11 +56,13 @@ async def get_rating_students(verified_user: User = Depends(current_user)
                               , session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(
+            user.c.id,
             user.c.username,
-            rating.c.questions_number, rating.c.solved) \
-            .join_from(rating, user, rating.c.user_id == user.c.id). \
-            order_by(desc(rating.c.solved)) \
-            .limit(10)
+            func.sum(rating.c.questions_number).label('questions_number'),
+            func.sum(rating.c.solved).label('solved')) \
+            .join_from(rating, user, rating.c.user_id == user.c.id) \
+            .group_by(rating.c.user_id) \
+            .order_by(desc(func.sum(rating.c.solved))).limit(10)
 
         result_proxy = await session.execute(query)
 
@@ -71,18 +74,52 @@ async def get_rating_students(verified_user: User = Depends(current_user)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@rating_router.get("/student-university", name="student:get best rating-university",
+@rating_router.get("/university-students", name="student:get best rating by university",
+                   dependencies=[Depends(HTTPBearer())], responses=SERVER_ERROR_RESPONSE)
+async def get_rating_students_university(university_id: int, verified_user: User = Depends(current_user)
+                                         , session: AsyncSession = Depends(get_async_session)):
+    try:
+        university_query = select(university).where(university.c.id == university_id)
+
+        result_university = await session.execute(university_query)
+        result_university = list(itertools.chain(result_university.parse()))
+
+        if not result_university:
+            raise
+
+        query = select(
+            user.c.id,
+            user.c.username,
+            func.sum(rating.c.questions_number).label('questions_number'),
+            func.sum(rating.c.solved).label('solved')).where(rating.c.university_id == university_id) \
+            .join_from(rating, user, rating.c.user_id == user.c.id) \
+            .group_by(rating.c.user_id) \
+            .order_by(desc(func.sum(rating.c.solved))).limit(10)
+
+        result_proxy = await session.execute(query)
+
+        result = ResultIntoList(result_proxy=result_proxy)
+        result = list(itertools.chain(result.parse()))
+
+        return result
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
+@rating_router.get("/university", name="university:get best rating",
                    dependencies=[Depends(HTTPBearer())],
                    responses=SERVER_ERROR_RESPONSE)
-async def get_rating_students(verified_user: User = Depends(current_user)
-                              , session: AsyncSession = Depends(get_async_session)):
+async def get_rating_universities(verified_user: User = Depends(current_user)
+                                  , session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(
-            user.c.username,
-            rating.c.questions_number, rating.c.solved) \
-            .join_from(rating, user, rating.c.user_id == user.c.id). \
-            order_by(desc(rating.c.solved)) \
-            .limit(10)
+            rating.c.university_id,
+            university.c.name,
+            func.sum(rating.c.questions_number).label('question_number'),
+            func.sum(rating.c.solved).label('solved')) \
+            .join_from(university, rating, rating.c.university_id == university.c.id) \
+            .group_by(rating.c.university_id) \
+            .order_by(desc(func.sum(rating.c.solved))).limit(10)
 
         result_proxy = await session.execute(query)
 

@@ -20,27 +20,19 @@ from quiz.quiz_db import get_quiz_db
 from utils.custom_exceptions import QuestionsInvalidNumber
 from utils.error_code import ErrorCode
 
-
 quiz_app = FastAPI()
 quiz_router = APIRouter(
     prefix="/quiz",
     tags=["Quiz"]
 )
-# quiz_router.include_router(quiz_app)
-#
-# limiter = Limiter(key_func=get_remote_address)
-# quiz_app.state.limiter = limiter
-# quiz_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-# limiter.slowapi_startup()
 
 
 @cache(expire=60 * 100)
-# @limiter.limit("100/10second")
 @quiz_router.get("/get", name="quiz:get quiz",
                  dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
 async def get_quiz(request: Request, response: Response, number_questions: int = 50,
                    verified_user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
-    try:
+    try:  # TODO if wrong answering
         if number_questions not in range(10, 51):
             raise QuestionsInvalidNumber
 

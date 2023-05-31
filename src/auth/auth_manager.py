@@ -153,7 +153,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         user_dict["hashed_password"] = self.password_helper.hash(password)
 
         if user_create.university_id not in range(1, 8):
-            user_dict["university_id"] = None
+            user_dict["university_id"] = 1
+
         if user_create.role_id in (1, 2):
             user_dict["role_id"] = user_create.role_id
         else:
