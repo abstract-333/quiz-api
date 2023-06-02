@@ -17,11 +17,7 @@ from utils.error_code import ErrorCode
 
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request, user_manager=Depends(get_user_manager)) -> bool:
-        user_manager = get_user_manager()
-        user = await user_manager.authenticate(request.form())
 
-        response = await backend.login(strategy, user)
-        await user_manager.on_after_login(user, request, response)
         return True
 
     async def logout(self, request: Request) -> bool:
