@@ -5,7 +5,6 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm
 from fastapi_users.authentication import backend
 from fastapi_users.authentication.strategy.db import strategy
-from redis import credentials
 from sqladmin.authentication import AuthenticationBackend
 from starlette import status
 from starlette.responses import RedirectResponse
@@ -17,9 +16,9 @@ from utils.error_code import ErrorCode
 
 
 class AdminAuth(AuthenticationBackend):
-    async def login(self, request: Request, user_manager =Depends(get_user_manager)) -> bool:
+    async def login(self, request: Request, user_manager=Depends(get_user_manager)) -> bool:
         user_manager = get_user_manager()
-        user = await user_manager.authenticate(credentials)
+        user = await user_manager.authenticate(request.form())
 
         response = await backend.login(strategy, user)
         await user_manager.on_after_login(user, request, response)
