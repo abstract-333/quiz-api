@@ -17,6 +17,12 @@ from utils.error_code import ErrorCode
 
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request, user_manager=Depends(get_user_manager)) -> bool:
+        form = await request.form()
+        username, password = form["username"], form["password"]
+
+        # Validate username/password credentials
+        # And update session
+        request.session.update({"token": "..."})
 
         return True
 
