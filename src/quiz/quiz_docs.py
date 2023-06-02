@@ -2,6 +2,7 @@ from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
 from starlette import status
 
+from rating.rating_docs import SERVER_ERROR_RESPONSE
 from utils.error_code import ErrorCode
 
 GET_QUIZ_RESPONSES: OpenAPIResponseType = {
@@ -29,18 +30,7 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_429_TOO_MANY_REQUESTS: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.TOO_MANY_REQUESTS: {
-                    "summary": "Too many requests in 2 minutes",
-                    "value": {"detail": "Too Many Requests"},
-                }}
-            },
-        },
-    },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
+
 }
+
+GET_QUIZ_RESPONSES.update(SERVER_ERROR_RESPONSE)

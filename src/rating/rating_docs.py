@@ -6,6 +6,17 @@ from utils.error_code import ErrorCode
 
 
 SERVER_ERROR_RESPONSE: OpenAPIResponseType = {
+    status.HTTP_429_TOO_MANY_REQUESTS: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.TOO_MANY_REQUESTS: {
+                    "summary": "Too many requests",
+                    "value": {"detail": ErrorCode.TOO_MANY_REQUESTS},
+                }}
+            },
+        },
+    },
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
         "description": "Internal sever error.",
     }
@@ -40,8 +51,6 @@ POST_RATING_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
 }
 
+POST_RATING_RESPONSES.update(SERVER_ERROR_RESPONSE)

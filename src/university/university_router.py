@@ -20,8 +20,8 @@ university_router = APIRouter(prefix="/university", tags=["University"])
 limiter = Limiter(key_func=get_remote_address)
 
 
-@university_router.get("/get-all", name="university:get all", responses=SERVER_ERROR_RESPONSE)
 @cache(expire=3600 * 24)  # TTL = 3600 seconds * 24 = one hour * 24 = one day
+@university_router.get("/get-all", name="university:get all", responses=SERVER_ERROR_RESPONSE)
 # @limiter.limit("5/minute")
 async def get_universities(session: AsyncSession = Depends(get_async_session)):
     try:

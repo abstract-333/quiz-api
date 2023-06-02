@@ -2,6 +2,7 @@ from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
 from starlette import status
 
+from rating.rating_docs import SERVER_ERROR_RESPONSE
 from utils.error_code import ErrorCode
 
 REQUEST_VERIFY_EMAIL_RESPONSE: OpenAPIResponseType = {
@@ -96,6 +97,10 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {status.HTTP_401_UNAUTHORIZED: {
             }
         }
     },
+},
 }
-}
+REQUEST_VERIFY_EMAIL_RESPONSE.update(SERVER_ERROR_RESPONSE)
+VERIFY_EMAIL_RESPONSE.update(SERVER_ERROR_RESPONSE)
+FORGET_PASSWORD_RESPONSES.update(SERVER_ERROR_RESPONSE)
+RESET_PASSWORD_RESPONSES.update(SERVER_ERROR_RESPONSE)
 

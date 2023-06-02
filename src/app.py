@@ -1,4 +1,9 @@
+from math import ceil
+
 import aiohttp
+from fastapi_cache.decorator import cache
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 from fastapi_profiler import PyInstrumentProfilerMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -8,6 +13,7 @@ from sqladmin import Admin
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 
 from admin.admin_auth import AdminAuth
 from admin.admin_schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, \
@@ -24,12 +30,15 @@ from university.university_router import university_router
 from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 import urllib.parse
+from utils.limiter_callback import default_callback
 
 app = FastAPI(
     title="Quiz App",
+    dependencies=[Depends(RateLimiter(times=2, seconds=5, callback=default_callback))]
 )
+
 # middleware to redirect HTTP to HTTPS
 # app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -45,22 +54,26 @@ app = FastAPI(
 
 # app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # app.add_middleware(SlowAPIMiddleware)
+# limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"],
+#                   storage_uri="redis://localhost:6379")
 
 authentication_backend = AdminAuth(secret_key=SECRET_KEY)
 admin = Admin(app=app, engine=engine, authentication_backend=authentication_backend)
 
 
 # app.add_middleware(PyInstrumentProfilerMiddleware)
-
-
 @app.on_event("startup")
-async def startup():
-    redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
+async def startup_event():
+    redis = await aioredis.from_url("redis://localhost:6379", max_connections=100)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    # await FastAPILimiter.init(redis, prefix="fastapi-cache")
-    # limiter = Limiter(key_func=get_remote_address, default_limits=["10/minute"], storage_uri="redis://localhost",
-    #                   enabled=False)
+    await FastAPILimiter.init(redis, prefix="limiter")
     # app.state.limiter = limiter
+
+
+@app.on_event("shutdown")
+async def startup_event():
+    await FastAPICache.clear()
+    await FastAPILimiter.close()
 
 
 @app.get("/")
@@ -95,4 +108,3 @@ app.include_router(rating_router)
 app.include_router(feedback_router)
 app.include_router(section_router)
 app.include_router(university_router)
-

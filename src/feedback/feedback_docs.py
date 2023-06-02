@@ -2,6 +2,7 @@ from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
 from starlette import status
 
+from rating.rating_docs import SERVER_ERROR_RESPONSE
 from utils.error_code import ErrorCode
 
 ADD_FEEDBACK_RESPONSES: OpenAPIResponseType = {
@@ -47,9 +48,6 @@ ADD_FEEDBACK_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
 }
 GET_FEEDBACK_RECEIVED_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
@@ -79,9 +77,6 @@ GET_FEEDBACK_RECEIVED_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
 }
 GET_FEEDBACK_SENT_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
@@ -108,9 +103,6 @@ GET_FEEDBACK_SENT_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
 }
 PATCH_FEEDBACK_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
@@ -165,9 +157,6 @@ PATCH_FEEDBACK_RESPONSES: OpenAPIResponseType = {
             }
         }
     },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
 }
 
 DELETE_FEEDBACK_RESPONSES: OpenAPIResponseType = {
@@ -211,7 +200,11 @@ DELETE_FEEDBACK_RESPONSES: OpenAPIResponseType = {
             }
         }
     },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
 }
+
+
+ADD_FEEDBACK_RESPONSES.update(SERVER_ERROR_RESPONSE)
+GET_FEEDBACK_RECEIVED_RESPONSES.update(SERVER_ERROR_RESPONSE)
+GET_FEEDBACK_SENT_RESPONSES.update(SERVER_ERROR_RESPONSE)
+PATCH_FEEDBACK_RESPONSES.update(SERVER_ERROR_RESPONSE)
+DELETE_FEEDBACK_RESPONSES.update(SERVER_ERROR_RESPONSE)
