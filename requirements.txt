@@ -91,3 +91,4 @@ sqladmin==0.11.0
 numpy
 fastapi-limiter
 aiohttp
+token-throttler

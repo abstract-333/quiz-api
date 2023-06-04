@@ -32,7 +32,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question, \
+target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question,
                    metadata_feedback, metadata_rating]
 
 

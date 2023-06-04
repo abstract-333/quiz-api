@@ -2,10 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, FastAPI
 from fastapi.security import HTTPBearer
 from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
 from starlette import status
@@ -29,8 +25,7 @@ quiz_router = APIRouter(
 
 @cache(expire=60 * 100)
 @quiz_router.get("/get", name="quiz:get quiz",
-                 dependencies=[Depends(HTTPBearer()),Depends(RateLimiter(times=2, seconds=5))],
-                 responses=GET_QUIZ_RESPONSES)
+                 dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
 async def get_quiz(request: Request, response: Response, number_questions: int = 50,
                    verified_user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     try:  # TODO if wrong answering

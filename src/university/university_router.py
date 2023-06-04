@@ -1,23 +1,16 @@
 import itertools
 
-from fastapi import APIRouter, Depends, HTTPException, FastAPI
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_cache.decorator import cache
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from starlette.requests import Request
-from starlette.responses import Response
-
 from auth.auth_models import university
 from database import get_async_session
 from rating.rating_docs import SERVER_ERROR_RESPONSE
 from utils.result_into_list import ResultIntoList
 
 university_router = APIRouter(prefix="/university", tags=["University"])
-
-limiter = Limiter(key_func=get_remote_address)
 
 
 @cache(expire=3600 * 24)  # TTL = 3600 seconds * 24 = one hour * 24 = one day

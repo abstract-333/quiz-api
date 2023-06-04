@@ -82,6 +82,7 @@ async def get_rating_students_university(university_id: int, verified_user: User
         university_query = select(university).where(university.c.id == university_id)
 
         result_university = await session.execute(university_query)
+        result_university = ResultIntoList(result_proxy=result_university)
         result_university = list(itertools.chain(result_university.parse()))
 
         if not result_university:

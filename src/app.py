@@ -1,25 +1,14 @@
-from math import ceil
-
-import aiohttp
-from fastapi_cache.decorator import cache
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 from fastapi_profiler import PyInstrumentProfilerMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
 from sqladmin import Admin
-from starlette.middleware.cors import CORSMiddleware
-from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
-
+from token_throttler import TokenThrottler, TokenBucket
+from token_throttler.storage import RuntimeStorage
 from admin.admin_auth import AdminAuth
 from admin.admin_schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, \
     QuestionAdmin, FeedbackAdmin, RatingAdmin
 from auth.auth_router import auth_router
-from config import SECRET_KEY, API_KEY
+from config import SECRET_KEY
 from database import engine
 from feedback.feedback_router import feedback_router
 from question.question_router import question_router
@@ -31,14 +20,11 @@ from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi import FastAPI, Depends
-import urllib.parse
 from utils.limiter_callback import default_callback
-
-app = FastAPI(
+app: FastAPI = FastAPI(
     title="Quiz App",
-    dependencies=[Depends(RateLimiter(times=2, seconds=5, callback=default_callback))]
+    # dependencies=[Depends(RateLimiter(times=200, seconds=60, callback=default_callback))]
 )
-
 # middleware to redirect HTTP to HTTPS
 # app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -66,31 +52,16 @@ admin = Admin(app=app, engine=engine, authentication_backend=authentication_back
 async def startup_event():
     redis = await aioredis.from_url("redis://localhost:6379", max_connections=100)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    await FastAPILimiter.init(redis, prefix="limiter")
+    # await FastAPILimiter.init(redis, prefix="limiter")
     # app.state.limiter = limiter
 
 
 @app.on_event("shutdown")
 async def startup_event():
     await FastAPICache.clear()
-    await FastAPILimiter.close()
+    # await FastAPILimiter.close()
 
 
-@app.get("/")
-async def get_address(request: Request):
-    ip_address = request.client.host
-    ip_address = "78.110.106.250"
-
-    params = urllib.parse.urlencode({
-        'access_key': f'{API_KEY}',
-        'query': f'{ip_address}',
-        'limit': 1
-    })
-    async with aiohttp.ClientSession() as session:
-        async with session.get('http://api.positionstack.com/v1/reverse', params=params) as response:
-            data = await response.json()
-
-    return data['data'][0]['country']
 
 
 admin.add_view(UserAdmin)
@@ -108,3 +79,25 @@ app.include_router(rating_router)
 app.include_router(feedback_router)
 app.include_router(section_router)
 app.include_router(university_router)
+
+throttler: TokenThrottler = TokenThrottler(cost=1, storage=RuntimeStorage())
+throttler.add_bucket(identifier="user_id", bucket=TokenBucket(replenish_time=10, max_tokens=5))
+
+
+# @app.get("/")
+# async def get_address(request: Request):
+#     if not throttler.consume(identifier="user_id"):
+#         return "NULLLLLLLLLL"
+#     ip_address = request.client.host
+#     ip_address = "78.110.106.250"
+#
+#     params = urllib.parse.urlencode({
+#         'key': f'{API_KEY}',
+#         'ip': f'{ip_address}',
+#         # 'localityLanguage': 'ar',
+#     })
+#     async with aiohttp.ClientSession() as session:
+#         async with session.get('https://api-bdc.net/data/country-by-ip', params=params) as response:
+#             data = await response.json()
+#
+#     return data

@@ -15,6 +15,7 @@ from question.question_db import get_questions_id_db, get_questions_section_db, 
     get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
     delete_question_db, get_question_ref
 from rating.rating_docs import SERVER_ERROR_RESPONSE
+from section.section_db import get_sections_id_db
 from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, QuestionNotExists, NotAllowed, QuestionNotEditable
 from utils.error_code import ErrorCode
@@ -74,8 +75,8 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer())],
-                     responses=GET_QUESTION_RESPONSES)
+@question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer()),
+        Depends(RateLimiter(times=1, seconds=5))], responses=GET_QUESTION_RESPONSES)
 async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_async_session),
                           verified_user: User = Depends(current_user)) -> dict:
     try:
@@ -87,6 +88,7 @@ async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_asy
         return {"status": "success",
                 "data": result,
                 "detail": None}
+
     except InvalidPage:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.INVALID_PAGE)
 
@@ -102,8 +104,9 @@ async def get_question_section_id(section_id: int, page: int = 1,
         if page < 1:
             raise InvalidPage
 
-        # TODO
-        if section_id not in (1, 2, 3):
+        section_result = await get_sections_id_db(section_id=section_id, session=session)
+
+        if not section_result:
             raise OutOfSectionIdException
 
         result = await get_questions_section_db(page=page, section_id=section_id, session=session)
