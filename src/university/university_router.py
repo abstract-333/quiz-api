@@ -5,6 +5,9 @@ from fastapi_cache.decorator import cache
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+from starlette.requests import Request
+from starlette.responses import Response
+
 from auth.auth_models import university
 from database import get_async_session
 from rating.rating_docs import SERVER_ERROR_RESPONSE
@@ -15,8 +18,7 @@ university_router = APIRouter(prefix="/university", tags=["University"])
 
 @cache(expire=3600 * 24)  # TTL = 3600 seconds * 24 = one hour * 24 = one day
 @university_router.get("/get-all", name="university:get all", responses=SERVER_ERROR_RESPONSE)
-# @limiter.limit("5/minute")
-async def get_universities(session: AsyncSession = Depends(get_async_session)):
+async def get_universities(request: Request, response: Response, session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(university)
         result_proxy = await session.execute(query)

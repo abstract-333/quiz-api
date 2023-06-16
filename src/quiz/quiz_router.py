@@ -15,6 +15,7 @@ from quiz.quiz_docs import GET_QUIZ_RESPONSES
 from quiz.quiz_db import get_quiz_db
 from utils.custom_exceptions import QuestionsInvalidNumber
 from utils.error_code import ErrorCode
+from auth.base_config import current_user, unverified_user
 
 quiz_app = FastAPI()
 quiz_router = APIRouter(
@@ -23,7 +24,7 @@ quiz_router = APIRouter(
 )
 
 
-@cache(expire=60 * 100)
+# @cache(expire=60 * 100)
 @quiz_router.get("/get", name="quiz:get quiz",
                  dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
 async def get_quiz(request: Request, response: Response, number_questions: int = 50,

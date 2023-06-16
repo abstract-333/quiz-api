@@ -1,30 +1,25 @@
-from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter
-from fastapi_profiler import PyInstrumentProfilerMiddleware
 from sqladmin import Admin
-from token_throttler import TokenThrottler, TokenBucket
-from token_throttler.storage import RuntimeStorage
-from admin.admin_auth import AdminAuth
-from admin.admin_schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, \
-    QuestionAdmin, FeedbackAdmin, RatingAdmin
 from auth.auth_router import auth_router
-from config import SECRET_KEY
-from database import engine
 from feedback.feedback_router import feedback_router
 from question.question_router import question_router
 from quiz.quiz_router import quiz_router
 from rating.rating_router import rating_router
 from section.section_router import section_router
 from university.university_router import university_router
+from admin.admin_auth import AdminAuth
+from admin.admin_schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, \
+    QuestionAdmin, FeedbackAdmin, RatingAdmin
+from config import SECRET_KEY
+from database import engine
 from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi import FastAPI, Depends
-from utils.limiter_callback import default_callback
+from fastapi import FastAPI
 app: FastAPI = FastAPI(
     title="Quiz App",
-    # dependencies=[Depends(RateLimiter(times=200, seconds=60, callback=default_callback))]
+    # dependencies=[Depends(BucketLimiter())]
 )
+
 # middleware to redirect HTTP to HTTPS
 # app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -48,6 +43,8 @@ admin = Admin(app=app, engine=engine, authentication_backend=authentication_back
 
 
 # app.add_middleware(PyInstrumentProfilerMiddleware)
+
+
 @app.on_event("startup")
 async def startup_event():
     redis = await aioredis.from_url("redis://localhost:6379", max_connections=100)
@@ -60,8 +57,6 @@ async def startup_event():
 async def startup_event():
     await FastAPICache.clear()
     # await FastAPILimiter.close()
-
-
 
 
 admin.add_view(UserAdmin)
@@ -79,11 +74,6 @@ app.include_router(rating_router)
 app.include_router(feedback_router)
 app.include_router(section_router)
 app.include_router(university_router)
-
-throttler: TokenThrottler = TokenThrottler(cost=1, storage=RuntimeStorage())
-throttler.add_bucket(identifier="user_id", bucket=TokenBucket(replenish_time=10, max_tokens=5))
-
-
 # @app.get("/")
 # async def get_address(request: Request):
 #     if not throttler.consume(identifier="user_id"):

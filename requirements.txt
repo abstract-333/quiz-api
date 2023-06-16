@@ -92,3 +92,4 @@ numpy
 fastapi-limiter
 aiohttp
 token-throttler
+psutil

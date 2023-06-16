@@ -11,7 +11,7 @@ from auth.auth_models import User
 from auth.auth_schemas import UserCreate
 from config import SECRET_KEY
 from database import get_async_session
-from utils.password_manager import PasswordManager
+from services.password_manager import PasswordManager
 from utils.constants import Constants
 from utils.email import send_email
 
