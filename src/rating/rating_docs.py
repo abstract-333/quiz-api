@@ -2,7 +2,7 @@ from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
 from starlette import status
 
-from utils.error_code import ErrorCode
+from utilties.error_code import ErrorCode
 
 
 SERVER_ERROR_RESPONSE: OpenAPIResponseType = {

@@ -16,9 +16,9 @@ from question.question_db import get_questions_id_db, get_questions_section_db, 
     delete_question_db, get_question_ref
 from rating.rating_docs import SERVER_ERROR_RESPONSE
 from section.section_db import get_sections_id_db
-from utils.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
+from utilties.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, QuestionNotExists, NotAllowed, QuestionNotEditable
-from utils.error_code import ErrorCode
+from utilties.error_code import ErrorCode
 
 question_router = APIRouter(
     prefix="/question",

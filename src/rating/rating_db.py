@@ -4,7 +4,7 @@ from sqlalchemy import select, update, insert, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from rating.rating_models import rating
 from rating.rating_schemas import RatingUpdate, RatingCreate
-from utils.result_into_list import ResultIntoList
+from utilties.result_into_list import ResultIntoList
 
 
 async def get_rating_user_id(user_id: int, session: AsyncSession):

@@ -11,7 +11,7 @@ from starlette.responses import Response
 from auth.auth_models import university
 from database import get_async_session
 from rating.rating_docs import SERVER_ERROR_RESPONSE
-from utils.result_into_list import ResultIntoList
+from utilties.result_into_list import ResultIntoList
 
 university_router = APIRouter(prefix="/university", tags=["University"])
 

@@ -2,7 +2,7 @@ import itertools
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.question_models import question
-from utils.result_into_list import ResultIntoList
+from utilties.result_into_list import ResultIntoList
 
 
 async def get_quiz_db(number_ai_questions: int, number_network_questions: int,

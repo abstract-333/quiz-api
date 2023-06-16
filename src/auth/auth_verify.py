@@ -9,7 +9,7 @@ from fastapi import Request
 from auth.auth_docs import REQUEST_VERIFY_EMAIL_RESPONSE, VERIFY_EMAIL_RESPONSE
 from auth.auth_manager import get_user_manager
 from auth.auth_schemas import UserRead
-from utils.error_code import ErrorCode
+from utilties.error_code import ErrorCode
 
 verify_router = APIRouter()
 

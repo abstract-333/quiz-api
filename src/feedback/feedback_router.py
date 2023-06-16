@@ -14,9 +14,9 @@ from feedback.feedback_db import feedback_sent_db, feedback_received_db, feedbac
 from feedback.feedback_models import feedback
 from feedback.feedback_schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
 from question.question_db import get_question_id_db
-from utils.custom_exceptions import FeedbackAlreadySent, QuestionNotExists, RatingException, DuplicatedTitle, \
+from utilties.custom_exceptions import FeedbackAlreadySent, QuestionNotExists, RatingException, DuplicatedTitle, \
     InvalidPage, FeedbackNotExists, FeedbackNotEditable, UserNotAdminSupervisor, NotAllowedDeleteBeforeTime, NotAllowed
-from utils.error_code import ErrorCode
+from utilties.error_code import ErrorCode
 
 feedback_router = APIRouter(
     prefix="/feedback",

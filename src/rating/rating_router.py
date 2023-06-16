@@ -15,9 +15,9 @@ from rating.rating_models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
 from rating.rating_schemas import RatingRead, RatingUpdate, RatingCreate
 from university.university_models import university
-from utils.custom_exceptions import QuestionsInvalidNumber, NotUser
-from utils.error_code import ErrorCode
-from utils.result_into_list import ResultIntoList
+from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser
+from utilties.error_code import ErrorCode
+from utilties.result_into_list import ResultIntoList
 
 rating_router = APIRouter(
     prefix="/rating",

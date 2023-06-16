@@ -5,7 +5,7 @@ from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
-from utils.error_code import ErrorCode
+from utilties.error_code import ErrorCode
 
 
 async def default_callback(request: Request, response: Response, pexpire: int):

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from section.section_models import section
-from utils.result_into_list import ResultIntoList
+from utilties.result_into_list import ResultIntoList
 
 
 async def get_sections_db(session: AsyncSession):

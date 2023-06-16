@@ -13,8 +13,8 @@ from auth.auth_models import User
 from database import get_async_session
 from quiz.quiz_docs import GET_QUIZ_RESPONSES
 from quiz.quiz_db import get_quiz_db
-from utils.custom_exceptions import QuestionsInvalidNumber
-from utils.error_code import ErrorCode
+from utilties.custom_exceptions import QuestionsInvalidNumber
+from utilties.error_code import ErrorCode
 from auth.base_config import current_user, unverified_user
 
 quiz_app = FastAPI()

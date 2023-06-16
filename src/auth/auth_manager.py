@@ -12,8 +12,8 @@ from auth.auth_schemas import UserCreate
 from config import SECRET_KEY
 from database import get_async_session
 from services.password_manager import PasswordManager
-from utils.constants import Constants
-from utils.email import send_email
+from utilties.constants import Constants
+from utilties.email import send_email
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):

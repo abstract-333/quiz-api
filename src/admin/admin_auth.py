@@ -12,7 +12,7 @@ from starlette.responses import RedirectResponse
 from auth.auth_manager import get_user_manager
 from auth.auth_models import User
 from auth.base_config import current_user
-from utils.error_code import ErrorCode
+from utilties.error_code import ErrorCode
 
 
 class AdminAuth(AuthenticationBackend):

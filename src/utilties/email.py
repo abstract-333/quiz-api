@@ -1,6 +1,6 @@
 import smtplib
 from email.message import EmailMessage
-from utils.constants import Constants
+from utilties.constants import Constants
 from celery import Celery
 from config import SMTP_USER, SMTP_PASSWORD
 

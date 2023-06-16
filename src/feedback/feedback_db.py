@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from feedback.feedback_models import feedback
 from question.question_models import question
-from utils.result_into_list import ResultIntoList
+from utilties.result_into_list import ResultIntoList
 
 
 async def get_remaining_time(added_time: TIMESTAMP, target_time):

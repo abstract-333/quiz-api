@@ -3,8 +3,8 @@ from sqlalchemy import select, update, insert, delete, Null
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.question_models import question
 from question.question_schemas import QuestionRead, QuestionUpdate, QuestionCreate
-from utils.custom_exceptions import UserNotAdminSupervisor, NumberOfChoicesNotFour, AnswerNotIncluded
-from utils.result_into_list import ResultIntoList
+from utilties.custom_exceptions import UserNotAdminSupervisor, NumberOfChoicesNotFour, AnswerNotIncluded
+from utilties.result_into_list import ResultIntoList
 
 
 async def check_question_validity(received_question: QuestionRead, role_id: int):

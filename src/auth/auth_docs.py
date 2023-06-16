@@ -3,7 +3,7 @@ from fastapi_users.router.common import ErrorModel
 from starlette import status
 
 from rating.rating_docs import SERVER_ERROR_RESPONSE
-from utils.error_code import ErrorCode
+from utilties.error_code import ErrorCode
 
 REQUEST_VERIFY_EMAIL_RESPONSE: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
