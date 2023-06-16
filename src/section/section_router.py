@@ -12,7 +12,7 @@ from section.section_db import get_sections_db
 section_router = APIRouter(
     prefix="/section",
     tags=["Section"],
-    dependencies=[Depends(BucketLimiter())]
+    # dependencies=[Depends(BucketLimiter())]
 )
 
 
