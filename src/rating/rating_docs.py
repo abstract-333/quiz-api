@@ -4,24 +4,20 @@ from starlette import status
 
 from utilties.error_code import ErrorCode
 
-
-SERVER_ERROR_RESPONSE: OpenAPIResponseType = {
-    status.HTTP_429_TOO_MANY_REQUESTS: {
+GET_RATING_RESPONSE: OpenAPIResponseType = {
+    status.HTTP_400_BAD_REQUEST: {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.TOO_MANY_REQUESTS: {
-                    "summary": "Too many requests",
-                    "value": {"detail": ErrorCode.TOO_MANY_REQUESTS},
-                }}
+                "examples": {ErrorCode.OUT_OF_UNIVERSITY_ID: {
+                    "summary": "Wrong entered university_id",
+                    "value": {"detail": ErrorCode.OUT_OF_UNIVERSITY_ID},
+                },
+                }
             },
         },
     },
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal sever error.",
-    }
 }
-
 POST_RATING_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
         "model": ErrorModel,
@@ -43,14 +39,61 @@ POST_RATING_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.ONLY_USER: {
                     "summary": "Only user can have rating",
                     "value": {"detail": ErrorCode.ONLY_USER},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
                 }
                 }
             },
         },
     },
 }
+SERVER_ERROR_UNAUTHORIZED_RESPONSE: OpenAPIResponseType = {
+    status.HTTP_429_TOO_MANY_REQUESTS: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.TOO_MANY_REQUESTS: {
+                    "summary": "Too many requests",
+                    "value": {"detail": ErrorCode.TOO_MANY_REQUESTS},
+                }}
+            },
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
+}
+SERVER_ERROR_AUTHORIZED_RESPONSE: OpenAPIResponseType = {
 
-POST_RATING_RESPONSES.update(SERVER_ERROR_RESPONSE)
+    status.HTTP_401_UNAUTHORIZED: {
+            "description": "Missing token or inactive user.",
+        },
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.USER_NOT_AUTHENTICATED: {
+                        "summary": "Not authenticated",
+                        "value": {"detail": "Not authenticated"},
+                    }
+                }
+            },
+        },
+    },
+    status.HTTP_429_TOO_MANY_REQUESTS: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.TOO_MANY_REQUESTS: {
+                    "summary": "Too many requests",
+                    "value": {"detail": ErrorCode.TOO_MANY_REQUESTS},
+                }}
+            },
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
+}
+
+POST_RATING_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+GET_RATING_RESPONSE.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

@@ -1,0 +1,176 @@
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+
+from fastapi_users import exceptions
+from fastapi_users.manager import BaseUserManager
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from auth.auth_docs import GET_DELETE_USER_ID_RESPONSE, PATCH_USER_ID_RESPONSE, PATCH_ME_RESPONSE
+from auth.auth_manager import get_user_manager
+from auth.auth_models import User
+from auth.auth_schemas import UserRead, UserUpdate
+from auth.base_config import current_user, current_superuser
+from database import get_async_session
+from question.question_db import get_questions_id_db
+from rating.rating_db import get_rating_user_id
+from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
+from section.section_db import get_sections_id_db, check_section_valid
+from university.university_db import check_university_valid
+from utilties.custom_exceptions import OutOfUniversityIdException, NotAllowedPatching, OutOfSectionIdException
+from utilties.error_code import ErrorCode
+
+manage_users_router = APIRouter()
+
+
+async def get_user_or_404(
+        user_id: str,
+        user_manager: BaseUserManager = Depends(get_user_manager),
+) -> User:
+    try:
+        parsed_id = user_manager.parse_id(user_id)
+        return await user_manager.get(parsed_id)
+
+    except (exceptions.UserNotExists, exceptions.InvalidID):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.USER_NOT_EXISTS)
+
+
+@manage_users_router.get(
+    "/me",
+    response_model=UserRead,
+    name="users:current_user",
+    responses=SERVER_ERROR_AUTHORIZED_RESPONSE
+)
+async def me(
+        user: User = Depends(current_user),
+):
+    return UserRead.from_orm(user)
+
+
+@manage_users_router.patch(
+    "/me",
+    response_model=UserRead,
+    dependencies=[Depends(current_user)],
+    name="users:patch_current_user",
+    responses=PATCH_ME_RESPONSE
+)
+async def update_me(
+        request: Request,
+        user_update: UserUpdate,  # type: ignore
+        verified_user: User = Depends(current_user),
+        user_manager: BaseUserManager = Depends(get_user_manager),
+        session: AsyncSession = Depends(get_async_session)
+):
+    try:
+        if verified_user.role_id == 1 and user_update.university_id != verified_user.university_id:
+            # Prevent user from changing own university if he had taken quiz before
+            get_user_rating = await get_rating_user_id(user_id=verified_user.id, session=session)
+
+            if get_user_rating:
+                raise NotAllowedPatching
+
+            # Check whether user changed university_id to valid one
+            await check_university_valid(university_id=user_update.university_id, session=session)
+
+        if verified_user.role_id == 2 and user_update.section_id != verified_user.section_id:
+            # Prevent user from changing own section if he had added question before
+            questions_by_user = await get_questions_id_db(user_id=verified_user.id, session=session)
+
+            if questions_by_user:
+                raise NotAllowedPatching
+
+            # Check whether user changed section_id to valid one
+            await check_section_valid(section_id=user_update.section_id, session=session)
+
+        # Check whether user entered correct role_id
+        if not await get_sections_id_db(section_id=user_update.role_id, session=session) or verified_user.role_id == 1:
+            user_update.role_id = 1
+
+        verified_user = await user_manager.update(
+            user_update, verified_user, safe=True, request=request
+        )
+        return UserRead.from_orm(verified_user)
+
+    except exceptions.InvalidPasswordException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.reason)
+
+    except exceptions.UserAlreadyExists:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+        )
+
+    except OutOfSectionIdException:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.OUT_OF_SECTION_ID)
+
+    except OutOfUniversityIdException:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.OUT_OF_UNIVERSITY_ID)
+
+    except NotAllowedPatching:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.NOT_ALLOWED_PATCHING)
+
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
+@manage_users_router.get(
+    "/{id}",
+    response_model=UserRead,
+    dependencies=[Depends(current_superuser)],
+    name="users:user",
+    responses=GET_DELETE_USER_ID_RESPONSE
+)
+async def get_user(user=Depends(get_user_or_404)):
+    return UserRead.from_orm(user)
+
+
+@manage_users_router.patch(
+    "/{id}",
+    response_model=UserRead,
+    dependencies=[Depends(current_superuser)],
+    name="users:patch_user",
+    responses=PATCH_USER_ID_RESPONSE
+)
+async def update_user(
+        user_update: UserUpdate,  # type: ignore
+        request: Request,
+        user=Depends(get_user_or_404),
+        user_manager: BaseUserManager = Depends(get_user_manager),
+):
+    try:
+        user = await user_manager.update(
+            user_update, user, safe=False, request=request
+        )
+        return UserRead.from_orm(user)
+
+    except exceptions.InvalidPasswordException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.reason,
+        )
+
+    except exceptions.UserAlreadyExists:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+        )
+
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
+@manage_users_router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    dependencies=[Depends(current_superuser)],
+    name="users:delete_user",
+    responses=GET_DELETE_USER_ID_RESPONSE
+)
+async def delete_user(
+        user=Depends(get_user_or_404),
+        user_manager: BaseUserManager = Depends(get_user_manager),
+        session: AsyncSession = Depends(get_async_session)
+):
+    await user_manager.delete(user)
+    return None

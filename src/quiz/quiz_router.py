@@ -24,7 +24,7 @@ quiz_router = APIRouter(
 )
 
 
-# @cache(expire=60 * 100)
+@cache(expire=60 * 5)
 @quiz_router.get("/get", name="quiz:get quiz",
                  dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
 async def get_quiz(request: Request, response: Response, number_questions: int = 50,

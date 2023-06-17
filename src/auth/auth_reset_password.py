@@ -62,7 +62,8 @@ async def reset_password(
             exceptions.UserInactive,
     ):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=ErrorCode.RESET_PASSWORD_BAD_TOKEN)
+    
     except exceptions.InvalidPasswordException as e:
-        raise HTTPException(status_code=400, detail=e.reason)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.reason)
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

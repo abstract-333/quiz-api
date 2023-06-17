@@ -10,14 +10,15 @@ from auth.base_config import current_user
 from auth.auth_models import user, User
 from database import get_async_session
 from feedback.feedback_models import feedback
-from rating.rating_docs import POST_RATING_RESPONSES, SERVER_ERROR_RESPONSE
+from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE, POST_RATING_RESPONSES, GET_RATING_RESPONSE
 from rating.rating_models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
-from rating.rating_schemas import RatingRead, RatingUpdate, RatingCreate
+from rating.rating_schemas import RatingUpdate, RatingCreate, RatingRead
 from university.university_models import university
-from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser
+from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser, OutOfUniversityIdException
 from utilties.error_code import ErrorCode
 from utilties.result_into_list import ResultIntoList
+from university.university_db import  check_university_valid
 
 rating_router = APIRouter(
     prefix="/rating",
@@ -26,7 +27,7 @@ rating_router = APIRouter(
 
 
 @rating_router.get("/supervisor", name="supervisor:get best rating", dependencies=[Depends(HTTPBearer())],
-                   responses=SERVER_ERROR_RESPONSE)
+                   responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
 async def add_feedback(verified_user: User = Depends(current_user)
                        , session: AsyncSession = Depends(get_async_session)):
     try:
@@ -51,7 +52,7 @@ async def add_feedback(verified_user: User = Depends(current_user)
 
 
 @rating_router.get("/student", name="student:get best rating", dependencies=[Depends(HTTPBearer())],
-                   responses=SERVER_ERROR_RESPONSE)
+                   responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
 async def get_rating_students(verified_user: User = Depends(current_user)
                               , session: AsyncSession = Depends(get_async_session)):
     try:
@@ -75,18 +76,11 @@ async def get_rating_students(verified_user: User = Depends(current_user)
 
 
 @rating_router.get("/university-students", name="student:get best rating by university",
-                   dependencies=[Depends(HTTPBearer())], responses=SERVER_ERROR_RESPONSE)
+                   dependencies=[Depends(HTTPBearer())], responses=GET_RATING_RESPONSE)
 async def get_rating_students_university(university_id: int, verified_user: User = Depends(current_user)
                                          , session: AsyncSession = Depends(get_async_session)):
     try:
-        university_query = select(university).where(university.c.id == university_id)
-
-        result_university = await session.execute(university_query)
-        result_university = ResultIntoList(result_proxy=result_university)
-        result_university = list(itertools.chain(result_university.parse()))
-
-        if not result_university:
-            raise
+        await check_university_valid(university_id=university_id, session=session)
 
         query = select(
             user.c.id,
@@ -103,13 +97,17 @@ async def get_rating_students_university(university_id: int, verified_user: User
         result = list(itertools.chain(result.parse()))
 
         return result
+
+    except OutOfUniversityIdException:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.OUT_OF_UNIVERSITY_ID)
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
 @rating_router.get("/university", name="university:get best rating",
                    dependencies=[Depends(HTTPBearer())],
-                   responses=SERVER_ERROR_RESPONSE)
+                   responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
 async def get_rating_universities(verified_user: User = Depends(current_user)
                                   , session: AsyncSession = Depends(get_async_session)):
     try:
@@ -132,8 +130,9 @@ async def get_rating_universities(verified_user: User = Depends(current_user)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@rating_router.get("/student/me", name="student:get rating", dependencies=[Depends(HTTPBearer())],
-                   responses=SERVER_ERROR_RESPONSE)
+@rating_router.get("/student/me", name="student:get rating",
+                   dependencies=[Depends(HTTPBearer())],
+                   responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
 async def get_rating_me(verified_user: User = Depends(current_user),
                         session: AsyncSession = Depends(get_async_session)):
     try:

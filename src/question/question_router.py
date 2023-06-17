@@ -11,11 +11,11 @@ from feedback.feedback_db import check_feedback_question_id, delete_feedback_que
 from question.question_docs import ADD_QUESTION_RESPONSES, GET_QUESTION_RESPONSES, GET_QUESTION_SECTION_RESPONSES, \
     PATCH_QUESTION_RESPONSES, DELETE_QUESTION_RESPONSES
 from question.question_schemas import QuestionCreate, QuestionRead, QuestionUpdate
-from question.question_db import get_questions_id_db, get_questions_section_db, check_question_validity, \
-    get_questions_title_db, update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
+from question.question_db import get_questions_id_db, get_questions_section_db, get_questions_title_db, \
+    update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
     delete_question_db, get_question_ref
-from rating.rating_docs import SERVER_ERROR_RESPONSE
-from section.section_db import get_sections_id_db
+from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
+from section.section_db import check_section_valid
 from utilties.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, QuestionNotExists, NotAllowed, QuestionNotEditable
 from utilties.error_code import ErrorCode
@@ -24,6 +24,19 @@ question_router = APIRouter(
     prefix="/question",
     tags=["Question"],
 )
+
+
+async def check_question_validity(received_question: QuestionRead, role_id: int):
+    received_question.choices.discard('')  # removing empty string from set
+
+    if role_id == 1:  # user can't add questions
+        raise UserNotAdminSupervisor
+
+    if len(received_question.choices) != 4:  # checking if question have 4 choices
+        raise NumberOfChoicesNotFour
+
+    if received_question.answer not in received_question.choices:  # checking if answer included in choices
+        raise AnswerNotIncluded
 
 
 @question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
@@ -76,7 +89,8 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
 
 
 @question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer()),
-        Depends(RateLimiter(times=1, seconds=5))], responses=GET_QUESTION_RESPONSES)
+                                                                             Depends(RateLimiter(times=1, seconds=5))],
+                     responses=GET_QUESTION_RESPONSES)
 async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_async_session),
                           verified_user: User = Depends(current_user)) -> dict:
     try:
@@ -104,10 +118,7 @@ async def get_question_section_id(section_id: int, page: int = 1,
         if page < 1:
             raise InvalidPage
 
-        section_result = await get_sections_id_db(section_id=section_id, session=session)
-
-        if not section_result:
-            raise OutOfSectionIdException
+        await check_section_valid(section_id=section_id, session=session)
 
         result = await get_questions_section_db(page=page, section_id=section_id, session=session)
 
@@ -208,8 +219,8 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
 
 @question_router.post("/wrong_solved/ref", name="question: get reference", dependencies=[Depends(HTTPBearer())],
-                      responses=SERVER_ERROR_RESPONSE)
-async def delete_question(list_question_id: list, verified_user: User = Depends(current_user),
+                      responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
+async def delete_question(list_question_id: list[int], verified_user: User = Depends(current_user),
                           session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
 

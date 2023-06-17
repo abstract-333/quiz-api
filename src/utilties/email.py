@@ -41,7 +41,7 @@ class Email:
         return email
 
 
-@celery.task
+@celery.task()
 def send_email(username: str, subject, email_destiny: str, token: str or None):
     email = Email.get_email_template(username, subject, email_destiny, token)
     with smtplib.SMTP_SSL(Email.SMTP_HOST, Email.SMTP_PORT) as server:

@@ -2,7 +2,7 @@ from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
 from starlette import status
 
-from rating.rating_docs import SERVER_ERROR_RESPONSE
+from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
 from utilties.error_code import ErrorCode
 
 ADD_FEEDBACK_RESPONSES: OpenAPIResponseType = {
@@ -28,9 +28,6 @@ ADD_FEEDBACK_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF: {
                     "summary": "Not allowed feedback own questions",
                     "value": {"detail": ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
                 }
                 }
             },
@@ -70,10 +67,8 @@ GET_FEEDBACK_RECEIVED_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
                     "summary": "Only supervisor or admin can receive feedback",
                     "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
+                }
+                }
             },
         },
     },
@@ -89,17 +84,6 @@ GET_FEEDBACK_SENT_RESPONSES: OpenAPIResponseType = {
                         "value": {"detail": ErrorCode.INVALID_PAGE},
                     }
                 }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
             },
         },
     },
@@ -125,10 +109,6 @@ PATCH_FEEDBACK_RESPONSES: OpenAPIResponseType = {
                     ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK: {
                         "summary": "Patch feedback not allowed",
                         "value": {"detail": ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK},
-                    }
-                    , ErrorCode.USER_NOT_AUTHENTICATED: {
-                        "summary": "Not authenticated",
-                        "value": {"detail": "Not authenticated"},
                     }
                 }
             },
@@ -168,9 +148,6 @@ DELETE_FEEDBACK_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.NOT_ALLOWED_DELETE_FEEDBACK: {
                     "summary": "Only feedback writer can delete it",
                     "value": {"detail": ErrorCode.NOT_ALLOWED_DELETE_FEEDBACK},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
                 }
                 }
             },
@@ -203,8 +180,8 @@ DELETE_FEEDBACK_RESPONSES: OpenAPIResponseType = {
 }
 
 
-ADD_FEEDBACK_RESPONSES.update(SERVER_ERROR_RESPONSE)
-GET_FEEDBACK_RECEIVED_RESPONSES.update(SERVER_ERROR_RESPONSE)
-GET_FEEDBACK_SENT_RESPONSES.update(SERVER_ERROR_RESPONSE)
-PATCH_FEEDBACK_RESPONSES.update(SERVER_ERROR_RESPONSE)
-DELETE_FEEDBACK_RESPONSES.update(SERVER_ERROR_RESPONSE)
+ADD_FEEDBACK_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+GET_FEEDBACK_RECEIVED_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+GET_FEEDBACK_SENT_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+PATCH_FEEDBACK_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+DELETE_FEEDBACK_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

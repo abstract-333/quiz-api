@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
 from fastapi_limiter.depends import RateLimiter
 
+from auth.auth_patch import manage_users_router
 from auth.base_config import fastapi_users, auth_backend
 from auth.auth_reset_password import reset_password_router
 from auth.auth_schemas import UserRead, UserCreate, UserUpdate
@@ -20,10 +21,13 @@ auth_router.include_router(
 )
 auth_router.include_router(verify_router)
 auth_router.include_router(reset_password_router)
+
 auth_router.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
+    manage_users_router,
     dependencies=[Depends(HTTPBearer())]
 )
+
+#TODO DELETE USER & PATCH USER(LIMIT SUPERVISOR CHANGING SECTION_ID AND LIMIT STUDENT CHANGING UNIVERISTY_ID)
 
 #
 # @router.post("/login")

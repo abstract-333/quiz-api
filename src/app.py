@@ -14,7 +14,8 @@ from database import engine
 from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+
 app: FastAPI = FastAPI(
     title="Quiz App",
     # dependencies=[Depends(BucketLimiter())]

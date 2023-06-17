@@ -13,6 +13,11 @@ class OutOfSectionIdException(Exception):
     pass
 
 
+class OutOfUniversityIdException(Exception):
+    """OUT_UNIVERSITY_ID_EXCEPTION"""
+    pass
+
+
 class AnswerNotIncluded(Exception):
     """ANSWER_NOT_INCLUDED_IN_CHOICES"""
     pass
@@ -80,4 +85,9 @@ class NotAllowedDeleteBeforeTime(Exception):
 
 class NotUser(Exception):
     """ONLY_USER_IS_ALLOWED"""
+    pass
+
+
+class NotAllowedPatching(Exception):
+    """NOT_ALLOWED_TO_PATCH"""
     pass

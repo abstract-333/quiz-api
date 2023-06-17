@@ -2,7 +2,7 @@ from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
 from starlette import status
 
-from rating.rating_docs import SERVER_ERROR_RESPONSE
+from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
 from utilties.error_code import ErrorCode
 
 GET_QUIZ_RESPONSES: OpenAPIResponseType = {
@@ -19,18 +19,6 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
-
 }
 
-GET_QUIZ_RESPONSES.update(SERVER_ERROR_RESPONSE)
+GET_QUIZ_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

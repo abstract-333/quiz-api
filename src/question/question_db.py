@@ -7,20 +7,7 @@ from utilties.custom_exceptions import UserNotAdminSupervisor, NumberOfChoicesNo
 from utilties.result_into_list import ResultIntoList
 
 
-async def check_question_validity(received_question: QuestionRead, role_id: int):
-    received_question.choices.discard('')  # removing empty string from set
-
-    if role_id == 1:  # user can't add questions
-        raise UserNotAdminSupervisor
-
-    if len(received_question.choices) != 4:  # checking if question have 4 choices
-        raise NumberOfChoicesNotFour
-
-    if received_question.answer not in received_question.choices:  # checking if answer included in choices
-        raise AnswerNotIncluded
-
-
-async def get_questions_id_db(page: int, user_id: int, session: AsyncSession):
+async def get_questions_id_db(user_id: int, session: AsyncSession, page: int = 1):
     # get questions by user_id
 
     page -= 1

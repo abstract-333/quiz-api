@@ -2,7 +2,7 @@ from fastapi_users.openapi import OpenAPIResponseType
 from fastapi_users.router.common import ErrorModel
 from starlette import status
 
-from rating.rating_docs import SERVER_ERROR_RESPONSE
+from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
 from utilties.error_code import ErrorCode
 
 ADD_QUESTION_RESPONSES: OpenAPIResponseType = {
@@ -29,10 +29,8 @@ ADD_QUESTION_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
                     "summary": "Only supervisor or admin can enter or patch quizzes",
                     "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
+                }
+                }
             },
         },
     },
@@ -76,10 +74,8 @@ PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
                 }, ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
                     "summary": "Only supervisor or admin can enter or patch quizzes",
                     "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
+                }
+                }
             },
         },
     },
@@ -136,17 +132,6 @@ GET_QUESTION_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
-            },
-        },
-    },
 }
 
 GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
@@ -155,7 +140,7 @@ GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
         "content": {
             "application/json": {
                 "examples": {ErrorCode.OUT_OF_SECTION_ID: {
-                    "summary": "Not authenticated",
+                    "summary": "Wrong section_id entered",
                     "value": {"detail": ErrorCode.OUT_OF_SECTION_ID},
                 },
                     ErrorCode.INVALID_PAGE: {
@@ -163,17 +148,6 @@ GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
                         "value": {"detail": ErrorCode.INVALID_PAGE},
                     }
                 }
-            },
-        },
-    },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
-                }}
             },
         },
     },
@@ -188,9 +162,6 @@ DELETE_QUESTION_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.NOT_QUESTION_OWNER: {
                     "summary": "Only question writer can delete it",
                     "value": {"detail": ErrorCode.NOT_QUESTION_OWNER},
-                }, ErrorCode.USER_NOT_AUTHENTICATED: {
-                    "summary": "Not authenticated",
-                    "value": {"detail": "Not authenticated"},
                 }
                 }
             },
@@ -210,8 +181,8 @@ DELETE_QUESTION_RESPONSES: OpenAPIResponseType = {
     },
 }
 
-ADD_QUESTION_RESPONSES.update(SERVER_ERROR_RESPONSE)
-PATCH_QUESTION_RESPONSES.update(SERVER_ERROR_RESPONSE)
-GET_QUESTION_RESPONSES.update(SERVER_ERROR_RESPONSE)
-GET_QUESTION_SECTION_RESPONSES.update(SERVER_ERROR_RESPONSE)
-DELETE_QUESTION_RESPONSES.update(SERVER_ERROR_RESPONSE)
+ADD_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+PATCH_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+GET_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+GET_QUESTION_SECTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+DELETE_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

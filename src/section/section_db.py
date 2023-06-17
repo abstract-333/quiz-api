@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from section.section_models import section
+from utilties.custom_exceptions import OutOfSectionIdException
 from utilties.result_into_list import ResultIntoList
 
 
@@ -19,7 +20,7 @@ async def get_sections_db(session: AsyncSession):
 
 
 async def get_sections_id_db(section_id: int, session: AsyncSession):
-    # get section by id
+    """get section by id"""
     query_section = select(section).where(section.c.id == section_id)
 
     result_proxy = await session.execute(query_section)
@@ -27,3 +28,12 @@ async def get_sections_id_db(section_id: int, session: AsyncSession):
     result = list(itertools.chain(result.parse()))  # converting result to list
 
     return result
+
+
+async def check_section_valid(section_id: int, session: AsyncSession):
+    """Check whether section_id is valid"""
+
+    section_result = await get_sections_id_db(section_id=section_id, session=session)
+
+    if not section_result:
+        raise OutOfSectionIdException
