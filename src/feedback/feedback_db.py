@@ -106,3 +106,10 @@ async def delete_feedback_id(feedback_id: int, session: AsyncSession):
     stmt = delete(feedback).where(feedback.c.id == feedback_id)
     await session.execute(stmt)
     await session.commit()
+
+
+async def delete_feedback_by_question_author_db(user_id: int, session: AsyncSession):
+    """delete feedback by question_author_id"""
+    stmt = delete(feedback).where(feedback.c.question_author_id == user_id)
+    await session.execute(stmt)
+    await session.commit()

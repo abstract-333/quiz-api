@@ -10,8 +10,9 @@ from auth.auth_models import User
 from auth.auth_schemas import UserRead, UserUpdate
 from auth.base_config import current_user, current_superuser
 from database import get_async_session
-from question.question_db import get_questions_id_db
-from rating.rating_db import get_rating_user_id
+from feedback.feedback_db import delete_feedback_by_question_author_db
+from question.question_db import get_questions_id_db, delete_all_questions_db
+from rating.rating_db import get_rating_user_id, delete_rating_db
 from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
 from section.section_db import get_sections_id_db, check_section_valid
 from university.university_db import check_university_valid
@@ -168,9 +169,21 @@ async def update_user(
     responses=GET_DELETE_USER_ID_RESPONSE
 )
 async def delete_user(
-        user=Depends(get_user_or_404),
+        user_for_delete=Depends(get_user_or_404),
         user_manager: BaseUserManager = Depends(get_user_manager),
         session: AsyncSession = Depends(get_async_session)
 ):
-    await user_manager.delete(user)
+    user_id = user_for_delete.id
+    if user_for_delete.role_id == 1:
+        # Delete all records in rating table for the student
+        await delete_rating_db(user_id=user_id, session=session)
+
+    else:
+        # Delete all records in feedback table that question author get
+        await delete_feedback_by_question_author_db(user_id=user_id, session=session)
+
+        # Delete all records in questions table for the user
+        await delete_all_questions_db(user_id=user_id, session=session)
+
+    await user_manager.delete(user_for_delete)
     return None

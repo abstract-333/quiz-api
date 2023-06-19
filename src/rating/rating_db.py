@@ -1,6 +1,6 @@
 import itertools
 
-from sqlalchemy import select, update, insert, desc
+from sqlalchemy import select, update, insert, desc, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from rating.rating_models import rating
 from rating.rating_schemas import RatingUpdate, RatingCreate
@@ -42,5 +42,12 @@ async def update_rating_db(rating_id: int, updated_rating: RatingUpdate, session
 async def insert_rating_db(rating_create: RatingCreate, session: AsyncSession):
     # insert rating
     stmt = insert(rating).values(**rating_create.dict())
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def delete_rating_db(user_id: int, session: AsyncSession):
+    """Delete all rating records for user"""
+    stmt = delete(rating).where(rating.c.user_id == user_id)
     await session.execute(stmt)
     await session.commit()

@@ -1,9 +1,8 @@
 import itertools
-from sqlalchemy import select, update, insert, delete, Null
+from sqlalchemy import select, update, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from question.question_models import question
-from question.question_schemas import QuestionRead, QuestionUpdate, QuestionCreate
-from utilties.custom_exceptions import UserNotAdminSupervisor, NumberOfChoicesNotFour, AnswerNotIncluded
+from question.question_schemas import QuestionUpdate, QuestionCreate
 from utilties.result_into_list import ResultIntoList
 
 
@@ -90,6 +89,13 @@ async def insert_question_db(question_create: QuestionCreate, session: AsyncSess
 async def delete_question_db(question_id: int, session: AsyncSession):
     # delete question by id
     stmt = delete(question).where(question.c.id == question_id)
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def delete_all_questions_db(user_id: int, session: AsyncSession):
+    """Delete all questions for user"""
+    stmt = delete(question).where(question.c.added_by == user_id)
     await session.execute(stmt)
     await session.commit()
 

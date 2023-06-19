@@ -2,6 +2,7 @@ from sqladmin import ModelView
 
 from auth.auth_models import User
 from auth.auth_schemas import Role
+from blacklist.blacklist_schemas import BlockedLevel, Blacklist
 from feedback.feedback_schemas import Feedback
 from question.question_schemas import Question
 from rating.rating_schemas import Rating
@@ -75,6 +76,30 @@ class RatingAdmin(ModelView, model=Rating):
     name_plural = "Ratings"
     column_list = [Rating.id, Rating.user_id, Rating.university_id,
                    Rating.questions_number, Rating.solved, Rating.added_at]
+
+    can_edit = True
+    can_delete = True
+    can_create = True
+    can_view_details = True
+    form_include_pk = True
+
+
+class BlockedLevelAdmin(ModelView, model=BlockedLevel):
+    name = "BlockedLevel"
+    name_plural = "BlockedLevel"
+    column_list = [BlockedLevel.id, BlockedLevel.unblocked_after, BlockedLevel.description]
+
+    can_edit = True
+    can_delete = True
+    can_create = True
+    can_view_details = True
+    form_include_pk = True
+
+
+class BlacklistAdmin(ModelView, model=Blacklist):
+    name = "BlackList"
+    name_plural = "Blacklist"
+    column_list = [Blacklist.id, Blacklist.user_id, Blacklist.blocking_level, Blacklist.blocked_at]
 
     can_edit = True
     can_delete = True

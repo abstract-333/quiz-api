@@ -11,7 +11,7 @@ from auth.auth_models import User
 from auth.auth_schemas import UserCreate
 from config import SECRET_KEY
 from database import get_async_session
-from services.password_manager import PasswordManager
+from utilties.password_manager import PasswordManager
 from utilties.constants import Constants
 from utilties.email import send_email
 
@@ -62,9 +62,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             user: Union[UserCreate, User],
     ) -> None:
         PasswordManager.validate_password(password, user)
-
-    async def on_after_register(self, user: User, request: Optional[Request] = None):
-        print(f"User {user.id} has registered.")
 
     async def on_after_forgot_password(
             self, user: User, token: str, request: Optional[Request] = None
@@ -127,6 +124,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_register(
             self, user: models.UP, request: Optional[Request] = None
     ) -> None:
+        print(f"User {user.id} has registered.")
         await self.request_verify(user, request)
         return None
 

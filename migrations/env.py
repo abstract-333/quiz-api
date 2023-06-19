@@ -14,6 +14,7 @@ from src.auth.auth_models import metadata as metadata_auth
 from src.question.question_models import metadata as metadata_question
 from src.feedback.feedback_models import metadata as metadata_feedback
 from src.rating.rating_models import metadata as metadata_rating
+from src.blacklist.blacklist_models import metadata as metadata_blacklist
 
 config = context.config
 
@@ -33,7 +34,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question,
-                   metadata_feedback, metadata_rating]
+                   metadata_feedback, metadata_rating, metadata_blacklist]
 
 
 # other values from the config, defined by the needs of env.py,

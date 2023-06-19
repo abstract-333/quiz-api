@@ -29,8 +29,8 @@ quiz_router = APIRouter(
                  dependencies=[Depends(HTTPBearer())], responses=GET_QUIZ_RESPONSES)
 async def get_quiz(request: Request, response: Response, number_questions: int = 50,
                    verified_user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
-    try:  # TODO if wrong answering
-        if number_questions not in range(10, 51):
+    try:
+        if number_questions not in range(20, 51):
             raise QuestionsInvalidNumber
 
         number_software_questions = int(number_questions * 0.6)

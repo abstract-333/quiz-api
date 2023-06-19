@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
 from auth.auth_models import user, User
+from blacklist.blacklist_db import add_blacklist_user_db
+from blacklist.blacklist_schemas import BlacklistCreate
+from blacklist.blacklist_service import raise_blocking_level
 from database import get_async_session
 from feedback.feedback_models import feedback
 from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE, POST_RATING_RESPONSES, GET_RATING_RESPONSE
@@ -18,7 +21,7 @@ from university.university_models import university
 from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser, OutOfUniversityIdException
 from utilties.error_code import ErrorCode
 from utilties.result_into_list import ResultIntoList
-from university.university_db import  check_university_valid
+from university.university_db import check_university_valid
 
 rating_router = APIRouter(
     prefix="/rating",
@@ -130,11 +133,16 @@ async def get_rating_universities(verified_user: User = Depends(current_user)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@rating_router.get("/student/me", name="student:get rating",
-                   dependencies=[Depends(HTTPBearer())],
-                   responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
-async def get_rating_me(verified_user: User = Depends(current_user),
-                        session: AsyncSession = Depends(get_async_session)):
+@rating_router.get(
+    path="/student/me",
+    name="student:get rating",
+    dependencies=[Depends(HTTPBearer())],
+    responses=SERVER_ERROR_AUTHORIZED_RESPONSE
+)
+async def get_rating_me(
+        verified_user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
     try:
         rating_user = await get_rating_user_id(user_id=verified_user.id, session=session)
 
@@ -160,6 +168,17 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
 
         if rating_read.questions_number not in range(51) or rating_read.solved not in range(51):
             raise QuestionsInvalidNumber
+
+        solved = rating_read.solved
+        questions_number = rating_read.questions_number
+
+        # if solved // questions_number < 0.11 or solved < 3 and verified_user.role_id == 1:
+            # TODO Blocking user
+        #     await add_blacklist_user_db(
+        #         blacklist_create=BlacklistCreate(user_id=verified_user.id),
+        #         session=session
+        #     )
+        #     await raise_blocking_level(user_id=verified_user.id, session=session)
 
         last_rating = await get_last_rating_user(user_id=verified_user.id, session=session)
 
