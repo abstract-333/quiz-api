@@ -20,7 +20,6 @@ quiz_router = APIRouter(
     prefix="/quiz",
     tags=["Quiz"]
 )
-
 # @cache(expire=60 * 5)
 @quiz_router.get(
     path="/get",

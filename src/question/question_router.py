@@ -1,7 +1,6 @@
 from collections import Counter
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
@@ -88,8 +87,7 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer()),
-                                                                             Depends(RateLimiter(times=1, seconds=5))],
+@question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_RESPONSES)
 async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_async_session),
                           verified_user: User = Depends(current_user)) -> dict:
