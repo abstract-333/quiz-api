@@ -69,8 +69,6 @@ sniffio
 sortedcontainers
 SQLAlchemy==2.0.15
 sqlalchemy_database
-sqlmodel
-sqlmodelx
 starlette
 tomli
 tortoise-orm

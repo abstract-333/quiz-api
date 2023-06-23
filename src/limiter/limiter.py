@@ -33,7 +33,7 @@ from utilties.error_code import ErrorCode
 class BucketLimiter:
     def __init__(
             self,
-            rate_authenticated: int = 3,
+            rate_authenticated: int = 5,
             time_authenticated: int = 10,
             rate_unauthenticated: int = 2,
             time_unauthenticated: int = 20,
