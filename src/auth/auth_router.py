@@ -6,6 +6,7 @@ from auth.base_config import fastapi_users, auth_backend
 from auth.auth_reset_password import reset_password_router
 from auth.auth_schemas import UserRead, UserCreate
 from auth.auth_verify import verify_router
+from auth.get_users import search_users_router
 
 auth_router = APIRouter(
     prefix="/auth",
@@ -20,7 +21,7 @@ auth_router.include_router(
 )
 auth_router.include_router(verify_router)
 auth_router.include_router(reset_password_router)
-
+auth_router.include_router(search_users_router)
 auth_router.include_router(
     manage_users_router,
     dependencies=[Depends(HTTPBearer())]
