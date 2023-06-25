@@ -79,11 +79,13 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: User = Depen
     except FeedbackAlreadySent:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"You already send a feedback for this question, please wait {remaining_time} hours")
-    except NotAllowed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
 
     except QuestionNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
+
+    except NotAllowed:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                            detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
 
     except DuplicatedTitle:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.DUPLICATED_TITLE)
@@ -132,11 +134,11 @@ async def get_sent_received(page: int = 1, verified_user: User = Depends(current
                 "detail": None
                 }
 
-    except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
-
     except InvalidPage:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.INVALID_PAGE)
+
+    except UserNotAdminSupervisor:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -201,11 +203,11 @@ async def patch_feedback(feedback_id: int, edited_feedback: FeedbackUpdate, veri
     except RatingException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.RATING_EXCEPTION)
 
-    except NotAllowed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK)
-
     except (FeedbackNotExists, QuestionNotExists):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
+
+    except NotAllowed:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK)
 
     except FeedbackNotEditable:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -243,11 +245,11 @@ async def delete_feedback(feedback_id: int, verified_user: User = Depends(curren
                 "detail": None
                 }
 
-    except NotAllowed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
-
     except FeedbackNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.FEEDBACK_NOT_EXISTS)
+
+    except NotAllowed:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF)
 
     except NotAllowedDeleteBeforeTime:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,

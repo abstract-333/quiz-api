@@ -2,15 +2,14 @@ import itertools
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from auth.auth_docs import SEARCH_USER_RESPONSE
 from auth.auth_models import User, user
-from auth.base_config import current_user, current_superuser
+from auth.base_config import current_superuser
 from database import get_async_session
-from rating.rating_docs import GET_RATING_RESPONSE
 from utilties.custom_exceptions import InvalidPage
 from utilties.error_code import ErrorCode
 from utilties.result_into_list import ResultIntoList
@@ -20,9 +19,11 @@ search_users_router = APIRouter(
 )
 
 
-@search_users_router.get(path="",
-                         name="user:get user by name or email",
-                         dependencies=[Depends(HTTPBearer())],
+@search_users_router.get(
+    path="",
+    name="user:get user by name or email",
+    dependencies=[Depends(HTTPBearer())],
+    responses=SEARCH_USER_RESPONSE
 )
 async def get_rating_students_university(
         page: int = 1,
@@ -31,7 +32,9 @@ async def get_rating_students_university(
         verified_superuser: User = Depends(current_superuser),
         session: AsyncSession = Depends(get_async_session)
 ):
+    """Get users by username, email or both"""
     try:
+        # Validate that entered page is not below 1
         if page < 1:
             raise InvalidPage
 
@@ -47,7 +50,8 @@ async def get_rating_students_university(
 
         return {"status": "success",
                 "data": result,
-                "detail": None}
+                "detail": None
+                }
 
     except InvalidPage:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.INVALID_PAGE)

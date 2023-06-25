@@ -18,6 +18,20 @@ GET_RATING_RESPONSE: OpenAPIResponseType = {
         },
     },
 }
+GET_RATING_SUPERVISOR_RESPONSE: OpenAPIResponseType = {
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
+                    "summary": "Only supervisor or admin can use this router",
+                    "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
+                }
+                }
+            },
+        },
+    },
+}
 POST_RATING_RESPONSES: OpenAPIResponseType = {
     status.HTTP_400_BAD_REQUEST: {
         "model": ErrorModel,
@@ -32,7 +46,7 @@ POST_RATING_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
         "model": ErrorModel,
         "content": {
             "application/json": {
@@ -62,10 +76,20 @@ SERVER_ERROR_UNAUTHORIZED_RESPONSE: OpenAPIResponseType = {
     }
 }
 SERVER_ERROR_AUTHORIZED_RESPONSE: OpenAPIResponseType = {
-
     status.HTTP_401_UNAUTHORIZED: {
-            "description": "Missing token or inactive user.",
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.USER_INACTIVE: {
+                        "summary": "Missing token or inactive user.",
+                        "value": {"detail": "Unauthorized"
+                                  },
+                    }
+                }
+            },
         },
+    },
     status.HTTP_403_FORBIDDEN: {
         "model": ErrorModel,
         "content": {
@@ -86,7 +110,8 @@ SERVER_ERROR_AUTHORIZED_RESPONSE: OpenAPIResponseType = {
                 "examples": {ErrorCode.TOO_MANY_REQUESTS: {
                     "summary": "Too many requests",
                     "value": {"detail": ErrorCode.TOO_MANY_REQUESTS},
-                }}
+                }
+                }
             },
         },
     },
@@ -95,5 +120,6 @@ SERVER_ERROR_AUTHORIZED_RESPONSE: OpenAPIResponseType = {
     }
 }
 
+GET_RATING_SUPERVISOR_RESPONSE.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 POST_RATING_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 GET_RATING_RESPONSE.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

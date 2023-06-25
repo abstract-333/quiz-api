@@ -25,7 +25,7 @@ question_router = APIRouter(
 )
 
 
-async def check_question_validity(received_question: QuestionRead, role_id: int):
+async def check_question_validity_user_grants(received_question: QuestionRead, role_id: int):
     received_question.choices.discard('')  # removing empty string from set
 
     if role_id == 1:  # user can't add questions
@@ -44,7 +44,7 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
                        session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
 
-        await check_question_validity(received_question=added_question, role_id=verified_user.role_id)
+        await check_question_validity_user_grants(received_question=added_question, role_id=verified_user.role_id)
 
         questions_with_same_title = await get_questions_title_db(question_title=added_question.question_title,
                                                                  session=session)
@@ -78,7 +78,7 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
 
     except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
 
     except DuplicatedQuestionException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
@@ -140,7 +140,7 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                          session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
 
-        await check_question_validity(edited_question, verified_user)
+        await check_question_validity_user_grants(edited_question, verified_user)
 
         question_old = await get_question_id_db(question_id=question_id, session=session)
 
@@ -196,14 +196,14 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
     except AnswerNotIncluded:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
 
-    except NotAllowed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_QUESTION_OWNER)
-
-    except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
-
     except QuestionNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
+
+    except NotAllowed:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.NOT_QUESTION_OWNER)
+
+    except UserNotAdminSupervisor:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
 
     except QuestionNotEditable:
         raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -259,11 +259,11 @@ async def delete_question(question_id: int, verified_user: User = Depends(curren
                 "details": None
                 }
 
-    except NotAllowed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.NOT_QUESTION_OWNER)
-
     except QuestionNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
+
+    except NotAllowed:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.NOT_QUESTION_OWNER)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

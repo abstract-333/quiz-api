@@ -12,13 +12,16 @@ from blacklist.blacklist_db import add_blacklist_user_db
 from blacklist.blacklist_schemas import BlacklistCreate
 from blacklist.blacklist_service import raise_blocking_level
 from database import get_async_session
+from feedback.feedback_db import get_rating_supervisor_db
 from feedback.feedback_models import feedback
-from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE, POST_RATING_RESPONSES, GET_RATING_RESPONSE
+from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE, POST_RATING_RESPONSES, GET_RATING_RESPONSE, \
+    GET_RATING_SUPERVISOR_RESPONSE
 from rating.rating_models import rating
 from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
 from rating.rating_schemas import RatingUpdate, RatingCreate, RatingRead
 from university.university_models import university
-from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser, OutOfUniversityIdException
+from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser, OutOfUniversityIdException, \
+    UserNotAdminSupervisor
 from utilties.error_code import ErrorCode
 from utilties.result_into_list import ResultIntoList
 from university.university_db import check_university_valid
@@ -50,6 +53,7 @@ async def add_feedback(verified_user: User = Depends(current_user)
         result = list(itertools.chain(result.parse()))
 
         return result
+    
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
@@ -155,6 +159,35 @@ async def get_rating_me(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
+@rating_router.get(
+    path="/supervisor/me",
+    name="supervisor:get rating",
+    dependencies=[Depends(HTTPBearer())],
+    responses=GET_RATING_SUPERVISOR_RESPONSE
+)
+async def get_rating_me(
+        verified_user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    """Get supervisor rating"""
+    try:
+        if verified_user.role_id == 1:  # user can't add questions
+            raise UserNotAdminSupervisor
+
+        result = await get_rating_supervisor_db(user_id=verified_user.id, session=session)
+
+        return {"status": "success",
+                "data": result,
+                "detail": None
+                }
+
+    except UserNotAdminSupervisor:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
 @rating_router.post("/student", name="student:add rating", dependencies=[Depends(HTTPBearer())],
                     responses=POST_RATING_RESPONSES)
 async def add_rating(rating_read: RatingRead, verified_user: User = Depends(current_user),
@@ -173,7 +206,7 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
         questions_number = rating_read.questions_number
 
         # if solved // questions_number < 0.11 or solved < 3 and verified_user.role_id == 1:
-            # TODO Blocking user
+        # TODO Blocking user
         #     await add_blacklist_user_db(
         #         blacklist_create=BlacklistCreate(user_id=verified_user.id),
         #         session=session
@@ -212,7 +245,7 @@ async def add_rating(rating_read: RatingRead, verified_user: User = Depends(curr
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
 
     except NotUser:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ErrorCode.ONLY_USER)
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.ONLY_USER)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

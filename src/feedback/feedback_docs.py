@@ -21,18 +21,6 @@ ADD_FEEDBACK_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF: {
-                    "summary": "Not allowed feedback own questions",
-                    "value": {"detail": ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF},
-                }
-                }
-            },
-        },
-    },
     status.HTTP_404_NOT_FOUND: {
         "model": ErrorModel,
         "content": {
@@ -40,6 +28,18 @@ ADD_FEEDBACK_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.QUESTION_NOT_EXISTS: {
                     "summary": "Question not exists",
                     "value": {"detail": ErrorCode.QUESTION_NOT_EXISTS},
+                }
+                }
+            },
+        },
+    },
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF: {
+                    "summary": "Not allowed feedback own questions",
+                    "value": {"detail": ErrorCode.NOT_ALLOWED_FEEDBACK_YOURSELF},
                 }
                 }
             },
@@ -60,7 +60,7 @@ GET_FEEDBACK_RECEIVED_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
         "model": ErrorModel,
         "content": {
             "application/json": {
@@ -101,19 +101,6 @@ PATCH_FEEDBACK_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {
-                    ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK: {
-                        "summary": "Patch feedback not allowed",
-                        "value": {"detail": ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK},
-                    }
-                }
-            },
-        },
-    },
     status.HTTP_404_NOT_FOUND: {
         "model": ErrorModel,
         "content": {
@@ -132,7 +119,11 @@ PATCH_FEEDBACK_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.FEEDBACK_NOT_EDITABLE: {
                     "summary": "You can't edit feedback now",
                     "value": {"detail": "You can edit the feedback for 15 minutes after you sent it"},
-                }
+                },
+                    ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK: {
+                        "summary": "Patch feedback not allowed",
+                        "value": {"detail": ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK},
+                    }
                 }
             }
         }
@@ -140,19 +131,6 @@ PATCH_FEEDBACK_RESPONSES: OpenAPIResponseType = {
 }
 
 DELETE_FEEDBACK_RESPONSES: OpenAPIResponseType = {
-
-    status.HTTP_403_FORBIDDEN: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.NOT_ALLOWED_DELETE_FEEDBACK: {
-                    "summary": "Only feedback writer can delete it",
-                    "value": {"detail": ErrorCode.NOT_ALLOWED_DELETE_FEEDBACK},
-                }
-                }
-            },
-        },
-    },
     status.HTTP_404_NOT_FOUND: {
         "model": ErrorModel,
         "content": {
@@ -169,16 +147,20 @@ DELETE_FEEDBACK_RESPONSES: OpenAPIResponseType = {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.NOT_ALLOWED_DELETE_FEEDBACK: {
-                    "summary": "Can't delete feedback now",
-                    "value": {"detail": "You can't delete feedback now, please wait 12 hours"},
-                }
+                "examples": {
+                    ErrorCode.NOT_ALLOWED_DELETE_FEEDBACK: {
+                        "summary": "Can't delete feedback now",
+                        "value": {"detail": "You can't delete feedback now, please wait 12 hours"},
+                    },
+                    ErrorCode.ONLY_FEEDBACK_AUTHOR_DELETE: {
+                        "summary": "Only feedback author can delete it",
+                        "value": {"detail": ErrorCode.ONLY_FEEDBACK_AUTHOR_DELETE},
+                    }
                 }
             }
         }
     },
 }
-
 
 ADD_FEEDBACK_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 GET_FEEDBACK_RECEIVED_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

@@ -22,7 +22,7 @@ ADD_QUESTION_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
         "model": ErrorModel,
         "content": {
             "application/json": {
@@ -64,7 +64,7 @@ PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
-    status.HTTP_403_FORBIDDEN: {
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
         "model": ErrorModel,
         "content": {
             "application/json": {
@@ -74,7 +74,11 @@ PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
                 }, ErrorCode.USER_NOT_ADMIN_SUPERVISOR: {
                     "summary": "Only supervisor or admin can enter or patch quizzes",
                     "value": {"detail": ErrorCode.USER_NOT_ADMIN_SUPERVISOR},
-                }
+                },
+                    ErrorCode.QUESTION_NOT_EDITABLE: {
+                        "summary": "You can't edit question now",
+                        "value": {"detail": "You can edit the question for 30 minutes after you sent it"},
+                    }
                 }
             },
         },
@@ -86,19 +90,6 @@ PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
                 "examples": {ErrorCode.QUESTION_NOT_EXISTS: {
                     "summary": "Question not exists",
                     "value": {"detail": ErrorCode.QUESTION_NOT_EXISTS},
-                }
-                }
-            }
-        }
-    },
-
-    status.HTTP_405_METHOD_NOT_ALLOWED: {
-        "model": ErrorModel,
-        "content": {
-            "application/json": {
-                "examples": {ErrorCode.QUESTION_NOT_EDITABLE: {
-                    "summary": "You can't edit question now",
-                    "value": {"detail": "You can edit the question for 30 minutes after you sent it"},
                 }
                 }
             }
@@ -155,7 +146,7 @@ GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
 
 DELETE_QUESTION_RESPONSES: OpenAPIResponseType = {
 
-    status.HTTP_403_FORBIDDEN: {
+    status.HTTP_405_METHOD_NOT_ALLOWED: {
         "model": ErrorModel,
         "content": {
             "application/json": {

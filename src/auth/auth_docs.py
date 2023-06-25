@@ -54,14 +54,72 @@ PATCH_ME_RESPONSE: OpenAPIResponseType = {
 }
 
 PATCH_USER_ID_RESPONSE: OpenAPIResponseType = {
-    status.HTTP_403_FORBIDDEN: {"description": "Not a superuser.",
-                                },
+
+    status.HTTP_401_UNAUTHORIZED: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.USER_INACTIVE: {
+                        "summary": "Missing token or inactive user.",
+                        "value": {"detail": "Unauthorized"
+                                  },
+                    }
+                }
+            },
+        },
+    },
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.USER_NOT_AUTHENTICATED: {
+                        "summary": "Not authenticated",
+                        "value": {"detail": "Not authenticated"},
+                    },
+                    ErrorCode.FORBIDDEN: {
+                        "summary": "Not superuser",
+                        "value": {"detail": ErrorCode.FORBIDDEN},
+                    }
+                }
+            },
+        },
+    },
+    status.HTTP_429_TOO_MANY_REQUESTS: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.TOO_MANY_REQUESTS: {
+                    "summary": "Too many requests",
+                    "value": {"detail": ErrorCode.TOO_MANY_REQUESTS},
+                }
+                }
+            },
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
 }
 
-GET_DELETE_USER_ID_RESPONSE: OpenAPIResponseType = {
-    status.HTTP_403_FORBIDDEN: {
-        "description": "Not a superuser.",
+SEARCH_USER_RESPONSE: OpenAPIResponseType = {
+    status.HTTP_400_BAD_REQUEST: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.INVALID_PAGE: {
+                        "summary": "Invalid page",
+                        "value": {"detail": ErrorCode.INVALID_PAGE},
+                    }
+                }
+            },
+        },
     },
+}
+GET_DELETE_USER_ID_RESPONSE: OpenAPIResponseType = {
+
     status.HTTP_404_NOT_FOUND: {
         "model": ErrorModel,
         "content": {
@@ -187,14 +245,12 @@ RESET_PASSWORD_RESPONSES: OpenAPIResponseType = {
             }
         },
     },
-
 }
-GET_DELETE_USER_ID_RESPONSE.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
+GET_DELETE_USER_ID_RESPONSE.update(PATCH_USER_ID_RESPONSE)
 
 PATCH_ME_RESPONSE.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 
-PATCH_USER_ID_RESPONSE.update(PATCH_ME_RESPONSE)
-PATCH_USER_ID_RESPONSE.pop(status.HTTP_405_METHOD_NOT_ALLOWED, None)
+SEARCH_USER_RESPONSE.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 
 REQUEST_VERIFY_EMAIL_RESPONSE.update(SERVER_ERROR_UNAUTHORIZED_RESPONSE)
 VERIFY_EMAIL_RESPONSE.update(SERVER_ERROR_UNAUTHORIZED_RESPONSE)

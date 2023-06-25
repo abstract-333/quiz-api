@@ -1,7 +1,7 @@
 import itertools
 from datetime import datetime
 
-from sqlalchemy import select, desc, delete, TIMESTAMP
+from sqlalchemy import select, desc, delete, TIMESTAMP, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from feedback.feedback_models import feedback
@@ -87,6 +87,19 @@ async def check_feedback_question_id(question_id: int, session: AsyncSession):
     result_proxy = await session.execute(feedback_query)
 
     result = ResultIntoList(result_proxy=result_proxy)
+    result = list(itertools.chain(result.parse()))
+
+    return result
+
+
+async def get_rating_supervisor_db(user_id: int, session: AsyncSession):
+    """Get rating of supervisor by user_id"""
+    rating_supervisor = select(
+        (func.sum(feedback.c.rating) / func.count(feedback.c.id)).label('average_rating'),
+        func.count(feedback.c.id).label('feedback_count')).where(feedback.c.question_author_id == user_id)
+
+    rating_supervisor = await session.execute(rating_supervisor)
+    result = ResultIntoList(result_proxy=rating_supervisor)
     result = list(itertools.chain(result.parse()))
 
     return result
