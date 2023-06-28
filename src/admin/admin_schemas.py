@@ -8,6 +8,7 @@ from question.question_schemas import Question
 from rating.rating_schemas import Rating
 from section.section_schemas import Section
 from university.university_schames import University
+from warning.warning_schemas import WarningClass
 
 
 class UserAdmin(ModelView, model=User):
@@ -16,6 +17,8 @@ class UserAdmin(ModelView, model=User):
     column_list = [User.id, User.username, User.email]
     can_edit = True
     can_delete = True
+    can_create = True
+    can_export = True
     can_view_details = True
     form_include_pk = True
 
@@ -26,7 +29,10 @@ class UniversityAdmin(ModelView, model=University):
     column_list = [University.id, University.name]
     can_edit = True
     can_delete = True
+    can_create = True
+    can_export = True
     can_view_details = True
+    form_include_pk = True
 
 
 class SectionAdmin(ModelView, model=Section):
@@ -35,7 +41,10 @@ class SectionAdmin(ModelView, model=Section):
     column_list = [Section.id, Section.name]
     can_edit = True
     can_delete = True
+    can_create = True
+    can_export = True
     can_view_details = True
+    form_include_pk = True
 
 
 class RoleAdmin(ModelView, model=Role):
@@ -44,7 +53,10 @@ class RoleAdmin(ModelView, model=Role):
     column_list = [Role.id, Role.name, Role.permissions]
     can_edit = True
     can_delete = True
+    can_create = True
+    can_export = True
     can_view_details = True
+    form_include_pk = True
 
 
 class QuestionAdmin(ModelView, model=Question):
@@ -55,6 +67,7 @@ class QuestionAdmin(ModelView, model=Question):
     can_edit = True
     can_delete = True
     can_create = True
+    can_export = True
     can_view_details = True
     form_include_pk = True
 
@@ -67,6 +80,7 @@ class FeedbackAdmin(ModelView, model=Feedback):
     can_edit = True
     can_delete = True
     can_create = True
+    can_export = True
     can_view_details = True
     form_include_pk = True
 
@@ -80,6 +94,7 @@ class RatingAdmin(ModelView, model=Rating):
     can_edit = True
     can_delete = True
     can_create = True
+    can_export = True
     can_view_details = True
     form_include_pk = True
 
@@ -92,6 +107,7 @@ class BlockedLevelAdmin(ModelView, model=BlockedLevel):
     can_edit = True
     can_delete = True
     can_create = True
+    can_export = True
     can_view_details = True
     form_include_pk = True
 
@@ -104,5 +120,19 @@ class BlacklistAdmin(ModelView, model=Blacklist):
     can_edit = True
     can_delete = True
     can_create = True
+    can_export = True
+    can_view_details = True
+    form_include_pk = True
+
+
+class WarningAdmin(ModelView, model=WarningClass):
+    name = "Warning"
+    name_plural = "Warnings"
+    column_list = [WarningClass.id, WarningClass.user_id, WarningClass.warning_level]
+
+    can_edit = True
+    can_delete = True
+    can_create = True
+    can_export = True
     can_view_details = True
     form_include_pk = True

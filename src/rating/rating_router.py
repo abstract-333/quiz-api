@@ -8,9 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
 from auth.auth_models import user, User
-from blacklist.blacklist_db import add_blacklist_user_db
-from blacklist.blacklist_schemas import BlacklistCreate
-from blacklist.blacklist_service import raise_blocking_level
 from database import get_async_session
 from feedback.feedback_db import get_rating_supervisor_db
 from feedback.feedback_models import feedback
@@ -188,10 +185,17 @@ async def get_rating_me(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@rating_router.post("/student", name="student:add rating", dependencies=[Depends(HTTPBearer())],
-                    responses=POST_RATING_RESPONSES)
-async def add_rating(rating_read: RatingRead, verified_user: User = Depends(current_user),
-                     session: AsyncSession = Depends(get_async_session)):
+@rating_router.post(
+    path="/student",
+    name="student:add rating",
+    dependencies=[Depends(HTTPBearer())],
+    responses=POST_RATING_RESPONSES
+)
+async def add_rating(
+        rating_read: RatingRead,
+        verified_user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
     try:
         if verified_user.role_id != 1:
             raise NotUser

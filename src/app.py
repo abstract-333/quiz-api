@@ -8,7 +8,7 @@ from section.section_router import section_router
 from university.university_router import university_router
 from admin.admin_auth import AdminAuth
 from admin.admin_schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, \
-    QuestionAdmin, FeedbackAdmin, RatingAdmin, BlacklistAdmin, BlockedLevelAdmin
+    QuestionAdmin, FeedbackAdmin, RatingAdmin, BlacklistAdmin, BlockedLevelAdmin, WarningAdmin
 from config import SECRET_KEY
 from database import engine
 from redis import asyncio as aioredis
@@ -69,7 +69,7 @@ admin.add_view(SectionAdmin)
 admin.add_view(UniversityAdmin)
 admin.add_view(BlockedLevelAdmin)
 admin.add_view(BlacklistAdmin)
-
+admin.add_view(WarningAdmin)
 
 app.include_router(auth_router)
 app.include_router(question_router)

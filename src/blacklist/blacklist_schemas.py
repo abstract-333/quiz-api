@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel
-from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey, DateTime
+from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey
 
 from auth.auth_models import user
 from blacklist.blacklist_models import blocked_level

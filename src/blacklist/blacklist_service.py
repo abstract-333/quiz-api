@@ -1,12 +1,13 @@
-from datetime import datetime
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from blacklist.blacklist_db import get_blacklist_user_db, get_blocked_level_db, update_blacklist_user_level_db
 from blacklist.blacklist_schemas import BlacklistUpdate
 
 
-async def raise_blocking_level(user_id: int, session: AsyncSession):
+async def manage_blocking_level(
+        user_id: int,
+        session: AsyncSession
+) -> None:
     """Raise the level of blocking or add new row if not exists"""
     blacklist_record = await get_blacklist_user_db(user_id=user_id, session=session)
     blocking_level = blacklist_record["blocking_level"] + 1
@@ -25,3 +26,15 @@ async def raise_blocking_level(user_id: int, session: AsyncSession):
                 session=session
             )
 
+
+async def get_blocking_level(
+        user_id: int,
+        session: AsyncSession
+) -> int | None:
+    """Get blocking level for the use by user_id"""
+    blacklist_record = await get_blacklist_user_db(user_id=user_id, session=session)
+
+    if blacklist_record:
+        return blacklist_record["blocking_level"]
+
+    return None
