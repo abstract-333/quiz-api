@@ -32,5 +32,5 @@ async def check_university_valid(university_id: int, session: AsyncSession):
     """Check whether university_id is valid"""
 
     university_get = await get_university_id_db(university_id=university_id, session=session)
-    if university_get:
+    if not university_get:
         raise OutOfUniversityIdException
