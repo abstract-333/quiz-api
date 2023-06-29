@@ -28,8 +28,8 @@ async def get_questions_section_db(show_inactive: False, page: int, section_id: 
     page *= 10
 
     if not show_inactive:
-        question_list_query = select(question).\
-            filter(question.c.section_id == section_id, question.c.active == 1).order_by(question.c.id)\
+        question_list_query = select(question). \
+            filter(question.c.section_id == section_id, question.c.active == 1).order_by(question.c.id) \
             .slice(page, page + 10)
     else:
         question_list_query = select(question). \
@@ -69,9 +69,17 @@ async def get_question_id_db(question_id: int, session: AsyncSession):
 
 
 async def update_question_db(question_id: int, question_update: QuestionUpdate, session: AsyncSession):
-    # get question by question_id
+    # Update question by question_id
 
     stmt = update(question).values(**question_update.dict()).where(question.c.id == question_id)
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def update_question_active_db(question_id: int, session: AsyncSession):
+    # Update question by set active bool to False
+
+    stmt = update(question).values(active=False).where(question.c.id == question_id)
     await session.execute(stmt)
     await session.commit()
 

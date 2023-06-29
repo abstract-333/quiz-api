@@ -12,7 +12,7 @@ from question.question_docs import ADD_QUESTION_RESPONSES, GET_QUESTION_RESPONSE
 from question.question_schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from question.question_db import get_questions_id_db, get_questions_section_db, get_questions_title_db, \
     update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
-    delete_question_db, get_question_ref
+    delete_question_db, get_question_ref, update_question_active_db
 from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
 from section.section_db import check_section_valid
 from utilties.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
@@ -243,6 +243,41 @@ async def delete_question(list_question_id: list[int], verified_user: User = Dep
                 "data": questions,
                 "details": None
                 }
+
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
+
+
+@question_router.post(
+    path="/active",
+    name="question: make question inactive",
+    dependencies=[Depends(HTTPBearer())],
+    responses=DELETE_QUESTION_RESPONSES
+)
+async def make_question_inactive(
+        question_id: int,
+        verified_user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+) -> dict:
+    try:
+
+        question_processed = await get_question_id_db(question_id=question_id, session=session)
+
+        if not question_processed:
+            raise QuestionNotExists
+
+        await update_question_active_db(
+            question_id=question_id,
+            session=session
+        )
+
+        return {"status": "success",
+                "data": None,
+                "details": None
+                }
+
+    except QuestionNotExists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

@@ -24,7 +24,7 @@ class QuestionCreate(BaseModel):
     section_id: int
     reference: str
     reference_link: Optional[str]
-    active : bool = False
+    active: bool = False
 
 
 class QuestionUpdate(BaseModel):
