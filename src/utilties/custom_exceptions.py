@@ -91,3 +91,28 @@ class NotUser(Exception):
 class NotAllowedPatching(Exception):
     """NOT_ALLOWED_TO_PATCH"""
     pass
+
+
+class RaisingBlockingLevel(Exception):
+    """RAISED_BLOCKING_LEVEL"""
+    pass
+
+
+class HighestBlockingLevel(Exception):
+    """HIGHEST_BLOCKING_LEVEL"""
+    pass
+
+
+class AddedToBlacklist(Exception):
+    """ADDED_TO_BLACKLIST"""
+    pass
+
+
+class WarnsUserException(Exception):
+    """WARNS_USER"""
+    pass
+
+
+class BlockedReturnAfter(Exception):
+    """YOU_ARE_BLOCKED_NOW"""
+    pass

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from auth.base_config import current_user
 from auth.auth_models import user, User
+from blacklist.blacklist_service import get_blocking_level, manage_blocking_level, get_blocking_time
 from database import get_async_session
 from feedback.feedback_db import get_rating_supervisor_db
 from feedback.feedback_models import feedback
@@ -18,10 +19,12 @@ from rating.rating_db import get_rating_user_id, update_rating_db, insert_rating
 from rating.rating_schemas import RatingUpdate, RatingCreate, RatingRead
 from university.university_models import university
 from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser, OutOfUniversityIdException, \
-    UserNotAdminSupervisor
+    UserNotAdminSupervisor, AddedToBlacklist, RaisingBlockingLevel, HighestBlockingLevel, WarnsUserException, \
+    BlockedReturnAfter
 from utilties.error_code import ErrorCode
 from utilties.result_into_list import ResultIntoList
 from university.university_db import check_university_valid
+from warning.warning_service import manage_warning_level
 
 rating_router = APIRouter(
     prefix="/rating",
@@ -50,7 +53,7 @@ async def add_feedback(verified_user: User = Depends(current_user)
         result = list(itertools.chain(result.parse()))
 
         return result
-    
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
@@ -196,26 +199,35 @@ async def add_rating(
         verified_user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
+    global unblocked_after
     try:
+        unblocked_after = await get_blocking_time(user_id=verified_user.id, session=session)
+
+        if unblocked_after is not None:
+            raise BlockedReturnAfter
+
         if verified_user.role_id != 1:
             raise NotUser
 
         if rating_read.solved > rating_read.questions_number:
             raise QuestionsInvalidNumber
 
-        if rating_read.questions_number not in range(51) or rating_read.solved not in range(51):
+        if rating_read.questions_number not in range(30, 51) or rating_read.solved not in range(51):
             raise QuestionsInvalidNumber
 
         solved = rating_read.solved
         questions_number = rating_read.questions_number
 
-        # if solved // questions_number < 0.11 or solved < 3 and verified_user.role_id == 1:
-        # TODO Blocking user
-        #     await add_blacklist_user_db(
-        #         blacklist_create=BlacklistCreate(user_id=verified_user.id),
-        #         session=session
-        #     )
-        #     await raise_blocking_level(user_id=verified_user.id, session=session)
+        if solved // questions_number < 0.11 or solved < 3:
+            # Get blocking level if exits and update it
+            blocking_level = await get_blocking_level(user_id=verified_user.id, session=session)
+
+            if blocking_level is not None:
+                await manage_blocking_level(user_id=verified_user.id, session=session)
+
+            else:
+                # Manage user's warnings
+                await manage_warning_level(user_id=verified_user.id, session=session)
 
         last_rating = await get_last_rating_user(user_id=verified_user.id, session=session)
 
@@ -244,6 +256,23 @@ async def add_rating(
                     "data": None,
                     "detail": None
                     }
+
+    except WarnsUserException:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.WARNING_USER)
+
+    except (RaisingBlockingLevel, AddedToBlacklist):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.TEMPORARY_BLOCKED
+        )
+    except BlockedReturnAfter:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"You are blocked now, please return after {unblocked_after} days"
+        )
+
+    except HighestBlockingLevel:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.PERMANENTLY_BLOCKED)
 
     except QuestionsInvalidNumber:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)

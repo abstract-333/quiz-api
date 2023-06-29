@@ -57,3 +57,14 @@ async def get_blocked_level_db(blocking_level: int, session: AsyncSession):
     return result[0] if result else None
 
 
+async def get_unblocked_after_db(user_id: int, session: AsyncSession):
+    """Get unblocked after"""
+
+    query = select(blacklist.c.blocked_at, blocked_level.c.unblocked_after).\
+        join(blocked_level, blocked_level.c.id == blacklist.c.blocking_level).filter(blacklist.c.user_id == user_id)
+
+    result_proxy = await session.execute(query)
+
+    result = ResultIntoList(result_proxy=result_proxy)
+    result = list(itertools.chain(result.parse()))
+    return result[0] if result else None

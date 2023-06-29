@@ -41,7 +41,23 @@ POST_RATING_RESPONSES: OpenAPIResponseType = {
                     ErrorCode.QUESTIONS_NUMBER_INVALID: {
                         "summary": "Invalid number of questions",
                         "value": {"detail": ErrorCode.QUESTIONS_NUMBER_INVALID},
-                    }
+                    },
+                    ErrorCode.PERMANENTLY_BLOCKED: {
+                        "summary": "Permanently blocked",
+                        "value": {"detail": ErrorCode.PERMANENTLY_BLOCKED},
+                    },
+                    ErrorCode.UNBLOCKED_AFTER: {
+                        "summary": "Raise blocking level",
+                        "value": {"detail": "You are blocked now, please return after n days"},
+                    },
+                    ErrorCode.TEMPORARY_BLOCKED: {
+                        "summary": "Temporary blocked",
+                        "value": {"detail": ErrorCode.TEMPORARY_BLOCKED},
+                    },
+                    ErrorCode.WARNING_USER: {
+                        "summary": "Warning user",
+                        "value": {"detail": ErrorCode.WARNING_USER},
+                    },
                 }
             },
         },
