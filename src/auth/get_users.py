@@ -41,7 +41,10 @@ async def get_rating_students_university(
         page -= 1
         page *= 10
 
-        query = select(user).filter(user.c.username.like(f"%{username}%"), user.c.email.like(f"%{email}%")). \
+        query = select(user).filter(
+            user.c.id != verified_superuser.id,
+            user.c.username.like(f"%{username}%"),
+            user.c.email.like(f"%{email}%")).\
             slice(page, page + 10)
         result_proxy = await session.execute(query)
 
