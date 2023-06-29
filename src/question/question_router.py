@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from auth.base_config import current_user
+from auth.base_config import current_user, current_superuser
 from auth.auth_models import User
 from database import get_async_session
 from feedback.feedback_db import check_feedback_question_id, delete_feedback_question_id, get_remaining_time
@@ -153,7 +153,7 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         remaining_time = await get_remaining_time(question_old[0]["added_at"], target_time=1800)
         remaining_time = remaining_time // 60
 
-        if abs(remaining_time) > 15:
+        if abs(remaining_time) > 15 and verified_user.role_id == 2:
             raise QuestionNotEditable
 
         if (Counter(question_old[0]["choices"]), question_old[0]["question_title"], question_old[0]["answer"],
@@ -233,18 +233,21 @@ async def delete_question(list_question_id: list[int], verified_user: User = Dep
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
 
-@question_router.delete("/delete", name="question: delete question", dependencies=[Depends(HTTPBearer())],
-                        responses=DELETE_QUESTION_RESPONSES)
-async def delete_question(question_id: int, verified_user: User = Depends(current_user),
-                          session: AsyncSession = Depends(get_async_session)) -> dict:
+@question_router.delete(
+    path="/delete",
+    name="question: delete question",
+    dependencies=[Depends(HTTPBearer()), Depends(current_superuser)],
+    responses=DELETE_QUESTION_RESPONSES
+)
+async def delete_question(
+        question_id: int,
+        session: AsyncSession = Depends(get_async_session)
+) -> dict:
     try:
 
         check_feedback = await check_feedback_question_id(question_id=question_id, session=session)
 
         question_for_deleting = await get_question_id_db(question_id=question_id, session=session)
-
-        if question_for_deleting[0]["added_by"] != verified_user.id:
-            raise NotAllowed
 
         if not question_for_deleting:
             raise QuestionNotExists
@@ -261,9 +264,6 @@ async def delete_question(question_id: int, verified_user: User = Depends(curren
 
     except QuestionNotExists:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
-
-    except NotAllowed:
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.NOT_QUESTION_OWNER)
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

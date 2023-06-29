@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Table, Column, Integer, String, TIMESTAMP, MetaData, JSON, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, TIMESTAMP, MetaData, JSON, ForeignKey, Boolean
 
 from auth.auth_models import user
 from section.section_models import section
@@ -18,5 +18,6 @@ question = Table(
     Column("reference_link", String(length=200), nullable=True),
     Column("added_by", ForeignKey(user.c.id), nullable=False),
     Column("added_at", TIMESTAMP, default=datetime.utcnow),
-    Column("section_id", Integer, ForeignKey(section.c.id), nullable=False)
+    Column("section_id", Integer, ForeignKey(section.c.id), nullable=False),
+    Column("active", Boolean, default=False, nullable=False)
 )

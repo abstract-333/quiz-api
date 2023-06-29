@@ -27,7 +27,8 @@ async def get_questions_section_db(page: int, section_id: int, session: AsyncSes
     page -= 1
     page *= 10
 
-    question_list_query = select(question).where(question.c.section_id == section_id).order_by(question.c.id) \
+    question_list_query = select(question).\
+        filter(question.c.section_id == section_id, question.c.active == 1).order_by(question.c.id)\
         .slice(page, page + 10)
     result_proxy = await session.execute(question_list_query)
 

@@ -146,14 +146,33 @@ GET_QUESTION_SECTION_RESPONSES: OpenAPIResponseType = {
 
 DELETE_QUESTION_RESPONSES: OpenAPIResponseType = {
 
-    status.HTTP_405_METHOD_NOT_ALLOWED: {
+    status.HTTP_401_UNAUTHORIZED: {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.NOT_QUESTION_OWNER: {
-                    "summary": "Only question writer can delete it",
-                    "value": {"detail": ErrorCode.NOT_QUESTION_OWNER},
+                "examples": {
+                    ErrorCode.USER_INACTIVE: {
+                        "summary": "Missing token or inactive user.",
+                        "value": {"detail": "Unauthorized"
+                                  },
+                    }
                 }
+            },
+        },
+    },
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.USER_NOT_AUTHENTICATED: {
+                        "summary": "Not authenticated",
+                        "value": {"detail": "Not authenticated"},
+                    },
+                    ErrorCode.FORBIDDEN: {
+                        "summary": "Not superuser",
+                        "value": {"detail": ErrorCode.FORBIDDEN},
+                    }
                 }
             },
         },
@@ -170,10 +189,24 @@ DELETE_QUESTION_RESPONSES: OpenAPIResponseType = {
             }
         }
     },
+    status.HTTP_429_TOO_MANY_REQUESTS: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {ErrorCode.TOO_MANY_REQUESTS: {
+                    "summary": "Too many requests",
+                    "value": {"detail": ErrorCode.TOO_MANY_REQUESTS},
+                }
+                }
+            },
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal sever error.",
+    }
 }
 
 ADD_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 PATCH_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 GET_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
 GET_QUESTION_SECTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)
-DELETE_QUESTION_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

@@ -98,7 +98,7 @@ SERVER_ERROR_AUTHORIZED_RESPONSE: OpenAPIResponseType = {
             "application/json": {
                 "examples": {
                     ErrorCode.USER_INACTIVE: {
-                        "summary": "Missing token or inactive user.",
+                        "summary": "Incorrect token or inactive user.",
                         "value": {"detail": "Unauthorized"
                                   },
                     }
@@ -112,7 +112,7 @@ SERVER_ERROR_AUTHORIZED_RESPONSE: OpenAPIResponseType = {
             "application/json": {
                 "examples": {
                     ErrorCode.USER_NOT_AUTHENTICATED: {
-                        "summary": "Not authenticated",
+                        "summary": "Missing token",
                         "value": {"detail": "Not authenticated"},
                     }
                 }

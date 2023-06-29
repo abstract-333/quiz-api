@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, JSON, Boolean
 from typing import Optional
 from auth.auth_models import user
 from database import Base
@@ -13,6 +13,7 @@ class QuestionRead(BaseModel):
     answer: str
     reference: str
     reference_link: Optional[str] = None
+    active = bool
 
 
 class QuestionCreate(BaseModel):
@@ -23,6 +24,7 @@ class QuestionCreate(BaseModel):
     section_id: int
     reference: str
     reference_link: Optional[str]
+    active : bool = False
 
 
 class QuestionUpdate(BaseModel):
@@ -44,3 +46,4 @@ class Question(Base):
     added_by = Column(Integer, ForeignKey(user.c.id), nullable=False)
     added_at = Column(TIMESTAMP, default=datetime.utcnow)
     section_id = Column(Integer, ForeignKey(section.c.id))
+    active = Column(Boolean, default=False, nullable=False)

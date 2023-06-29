@@ -63,7 +63,7 @@ class QuestionAdmin(ModelView, model=Question):
     name = "Question"
     name_plural = "Questions"
     column_list = [Question.id, Question.question_title, Question.choices, Question.answer, Question.reference,
-                   Question.reference_link, Question.added_by, Question.added_at, Question.section_id]
+                   Question.reference_link, Question.added_by, Question.added_at, Question.section_id, Question.active]
     can_edit = True
     can_delete = True
     can_create = True
