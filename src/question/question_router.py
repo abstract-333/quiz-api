@@ -110,7 +110,7 @@ async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_asy
 
 @question_router.get("/get", name="question:get question", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_SECTION_RESPONSES)
-async def get_question_section_id(section_id: int, page: int = 1,
+async def get_question_section_id(section_id: int, page: int = 1, verified_user: User = Depends(current_user),
                                   session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
         if page < 1:
@@ -118,7 +118,22 @@ async def get_question_section_id(section_id: int, page: int = 1,
 
         await check_section_valid(section_id=section_id, session=session)
 
-        result = await get_questions_section_db(page=page, section_id=section_id, session=session)
+        if verified_user.role_id == 3:
+            # If user is admin then return all question(active or not)
+            result = await get_questions_section_db(
+                show_inactive=True,
+                page=page,
+                section_id=section_id,
+                session=session
+            )
+        else:
+            # If user is not admin then return just active questions
+            result = await get_questions_section_db(
+                show_inactive=False,
+                page=page,
+                section_id=section_id,
+                session=session
+            )
 
         return {"status": "success",
                 "data": result,

@@ -21,15 +21,21 @@ async def get_questions_id_db(user_id: int, session: AsyncSession, page: int = 1
     return result
 
 
-async def get_questions_section_db(page: int, section_id: int, session: AsyncSession):
+async def get_questions_section_db(show_inactive: False, page: int, section_id: int, session: AsyncSession):
     # get questions by section_id
 
     page -= 1
     page *= 10
 
-    question_list_query = select(question).\
-        filter(question.c.section_id == section_id, question.c.active == 1).order_by(question.c.id)\
-        .slice(page, page + 10)
+    if not show_inactive:
+        question_list_query = select(question).\
+            filter(question.c.section_id == section_id, question.c.active == 1).order_by(question.c.id)\
+            .slice(page, page + 10)
+    else:
+        question_list_query = select(question). \
+            filter(question.c.section_id == section_id).order_by(question.c.id) \
+            .slice(page, page + 10)
+
     result_proxy = await session.execute(question_list_query)
 
     result = ResultIntoList(result_proxy=result_proxy)
