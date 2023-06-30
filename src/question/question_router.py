@@ -168,8 +168,10 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
         remaining_time = await get_remaining_time(question_old[0]["added_at"], target_time=1800)
         remaining_time = remaining_time // 60
 
-        if abs(remaining_time) > 15 and verified_user.role_id == 2:
-            raise QuestionNotEditable
+        if verified_user.role_id == 2:
+            del edited_question.active
+            if abs(remaining_time) > 15:
+                raise QuestionNotEditable
 
         if (Counter(question_old[0]["choices"]), question_old[0]["question_title"], question_old[0]["answer"],
             question_old[0]["reference"], question_old[0]["reference_link"]) == (
@@ -196,6 +198,7 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                                          answer=edited_question.answer,
                                          reference=edited_question.reference,
                                          reference_link=edited_question.reference_link,
+                                         active=question_old[0]["active"]
                                          )
 
         await update_question_db(question_id=question_id, question_update=question_update, session=session)

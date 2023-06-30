@@ -13,7 +13,7 @@ class QuestionRead(BaseModel):
     answer: str
     reference: str
     reference_link: Optional[str] = None
-    active = bool
+    active: Optional[bool]
 
 
 class QuestionCreate(BaseModel):
@@ -33,6 +33,7 @@ class QuestionUpdate(BaseModel):
     answer: str
     reference: str
     reference_link: Optional[str]
+    active: bool
 
 
 class Question(Base):
