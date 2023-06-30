@@ -1,5 +1,6 @@
 from typing import Optional
 from fastapi_users import schemas
+from pydantic import BaseModel
 from sqlalchemy import Column, String, Integer, JSON
 
 from database import Base
@@ -34,7 +35,17 @@ class UserCreate(schemas.BaseUserCreate):
     is_verified: Optional[bool] = False
 
 
-class UserUpdate(schemas.BaseUserUpdate):
+class UserUpdate(BaseModel):
+    username: str
+    email: str
+    password: Optional[str]
+    phone: str
+    phone: Optional[str]
+    university_id: int
+    section_id: Optional[int]
+
+
+class UserAdminUpdate(schemas.BaseUserUpdate):
     email: str
     phone: str
     role_id: int
@@ -44,11 +55,6 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_active: Optional[bool]
     is_superuser: Optional[bool]
     is_verified: Optional[bool]
-
-
-# class StudentCreate(BaseModel):
-#     id: int
-#     number_solved: Optional[int]
 
 
 class Role(Base):

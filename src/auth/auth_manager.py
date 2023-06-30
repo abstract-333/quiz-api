@@ -166,6 +166,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         return created_user
 
 
+
+
 async def get_user_db(session: AsyncSession = Depends(get_async_session)) -> SQLAlchemyUserDatabase:
     yield SQLAlchemyUserDatabase(session, User)
 
