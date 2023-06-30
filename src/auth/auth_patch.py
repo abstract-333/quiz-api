@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.auth_docs import GET_DELETE_USER_ID_RESPONSE, PATCH_USER_ID_RESPONSE, PATCH_ME_RESPONSE
 from auth.auth_manager import get_user_manager
 from auth.auth_models import User
-from auth.auth_schemas import UserRead, UserUpdate, UserAdminUpdate
+from auth.auth_schemas import UserRead, UserUpdate, UserCreate
 from auth.base_config import current_user, current_superuser
 from database import get_async_session
 from feedback.feedback_db import delete_feedback_by_question_author_db
@@ -133,7 +133,7 @@ async def get_user(user=Depends(get_user_or_404)):
     responses=PATCH_USER_ID_RESPONSE
 )
 async def update_user(
-        user_update: UserAdminUpdate,  # type: ignore
+        user_update: UserCreate,  # type: ignore
         request: Request,
         user=Depends(get_user_or_404),
         user_manager: BaseUserManager = Depends(get_user_manager),
