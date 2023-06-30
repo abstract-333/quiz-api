@@ -8,6 +8,7 @@ from starlette import status
 
 from auth.auth_docs import SEARCH_USER_RESPONSE
 from auth.auth_models import User, user
+from auth.auth_schemas import UserRead
 from auth.base_config import current_superuser
 from database import get_async_session
 from utilties.custom_exceptions import InvalidPage
@@ -41,7 +42,18 @@ async def get_rating_students_university(
         page -= 1
         page *= 10
 
-        query = select(user).filter(
+        query = select(
+            user.c.id,
+            user.c.username,
+            user.c.email,
+            user.c.role_id,
+            user.c.university_id,
+            user.c.phone,
+            user.c.section_id,
+            user.c.is_active,
+            user.c.is_superuser,
+            user.c.is_verified,)\
+            .filter(
             user.c.id != verified_superuser.id,
             user.c.username.like(f"%{username}%"),
             user.c.email.like(f"%{email}%")).\
