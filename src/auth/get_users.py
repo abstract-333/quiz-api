@@ -8,7 +8,6 @@ from starlette import status
 
 from auth.auth_docs import SEARCH_USER_RESPONSE
 from auth.auth_models import User, user
-from auth.auth_schemas import UserRead
 from auth.base_config import current_superuser
 from database import get_async_session
 from utilties.custom_exceptions import InvalidPage
@@ -26,7 +25,7 @@ search_users_router = APIRouter(
     dependencies=[Depends(HTTPBearer())],
     responses=SEARCH_USER_RESPONSE
 )
-async def get_rating_students_university(
+async def get_users(
         page: int = 1,
         username: str = '',
         email: str = '',
@@ -50,6 +49,7 @@ async def get_rating_students_university(
             user.c.university_id,
             user.c.phone,
             user.c.section_id,
+            user.c.registered_at,
             user.c.is_active,
             user.c.is_superuser,
             user.c.is_verified,)\
