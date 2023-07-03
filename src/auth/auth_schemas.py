@@ -39,7 +39,6 @@ class UserUpdate(BaseModel):
     username: str
     email: str
     password: Optional[str]
-    phone: str
     phone: Optional[str]
     university_id: int
     section_id: Optional[int]
@@ -49,6 +48,7 @@ class UserAdminUpdate(schemas.BaseUserUpdate):
     email: str
     phone: str
     role_id: int
+    password: Optional[str]
     phone: Optional[str]
     university_id: int
     section_id: Optional[int]
