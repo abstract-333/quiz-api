@@ -116,3 +116,7 @@ class WarnsUserException(Exception):
 class BlockedReturnAfter(Exception):
     """YOU_ARE_BLOCKED_NOW"""
     pass
+
+class EmptyList(Exception):
+    """EMPTY_LIST"""
+    pass

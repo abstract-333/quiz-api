@@ -19,6 +19,19 @@ GET_QUIZ_RESPONSES: OpenAPIResponseType = {
             },
         },
     },
+    status.HTTP_404_NOT_FOUND: {
+        "model": ErrorModel,
+        "content": {
+            "application/json": {
+                "examples": {
+                    ErrorCode.EMPTY_LIST: {
+                        "summary": "Empty list returned",
+                        "value": {"detail": ErrorCode.EMPTY_LIST},
+                    }
+                }
+            },
+        },
+    },
 }
 
 GET_QUIZ_RESPONSES.update(SERVER_ERROR_AUTHORIZED_RESPONSE)

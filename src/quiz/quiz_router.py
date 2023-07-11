@@ -11,7 +11,7 @@ from auth.auth_models import User
 from database import get_async_session
 from quiz.quiz_docs import GET_QUIZ_RESPONSES
 from quiz.quiz_db import get_quiz_db
-from utilties.custom_exceptions import QuestionsInvalidNumber
+from utilties.custom_exceptions import QuestionsInvalidNumber, EmptyList
 from utilties.error_code import ErrorCode
 from auth.base_config import current_user
 
@@ -35,9 +35,11 @@ async def get_quiz(
         session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
+        # Check if number of questions requested is valid
         if number_questions not in range(20, 51):
             raise QuestionsInvalidNumber
 
+        # Get questions from db
         number_software_questions = int(number_questions * 0.6)
         number_network_questions = int(number_questions * 0.2)
         number_ai_questions = int(number_questions * 0.2)
@@ -57,12 +59,20 @@ async def get_quiz(
                                        number_software_questions=number_software_questions,
                                        session=session)
 
+        # Raise exception if list is empty
+        if not result:
+            raise EmptyList
+
+        # Shuffle the list before return it
         num_random.shuffle(result)
 
         return {"status": "success",
                 "data": result,
                 "details": None
                 }
+
+    except EmptyList:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.EMPTY_LIST)
 
     except QuestionsInvalidNumber:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
