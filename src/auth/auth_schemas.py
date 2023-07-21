@@ -46,6 +46,7 @@ class UserUpdate(BaseModel):
 
 class UserAdminUpdate(schemas.BaseUserUpdate):
     email: str
+    username: str
     phone: str
     role_id: int
     password: Optional[str]
