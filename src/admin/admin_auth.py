@@ -16,27 +16,27 @@ class AdminAuth(AuthenticationBackend, UserManager):
         email, password = form["username"], form["password"]
         password_helper = PasswordManager().password_helper
 
-        try:
-            user_taken = await get_user_db(email)
-            print(user_taken)
-
-            if not user_taken:
-                password_helper.hash(password)
-                raise exceptions.UserNotExists()
-
-        except exceptions.UserNotExists:
-            # Run the hasher to mitigate timing attack
-            # Inspired from Django: https://code.djangoproject.com/ticket/20760
-            return False
-
-        verified, updated_password_hash = password_helper.verify_and_update(
-            password, user_taken["hashed_password"]
-        )
-        if not verified:
-            return False
-
-        if user_taken["role_id"] != 3:
-            return False
+        # try:
+        #     user_taken = await get_user_db(email)
+        #     print(user_taken)
+        #
+        #     if not user_taken:
+        #         password_helper.hash(password)
+        #         raise exceptions.UserNotExists()
+        #
+        # except exceptions.UserNotExists:
+        #     # Run the hasher to mitigate timing attack
+        #     # Inspired from Django: https://code.djangoproject.com/ticket/20760
+        #     return False
+        #
+        # verified, updated_password_hash = password_helper.verify_and_update(
+        #     password, user_taken["hashed_password"]
+        # )
+        # if not verified:
+        #     return False
+        #
+        # if user_taken["role_id"] != 3:
+        #     return False
 
         request.session.update({"token": "..."})
 
