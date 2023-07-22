@@ -35,7 +35,7 @@ class UserCreate(schemas.BaseUserCreate):
     is_verified: Optional[bool] = False
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(schemas.BaseUserUpdate):
     username: str
     email: str
     password: Optional[str]

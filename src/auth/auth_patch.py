@@ -23,7 +23,7 @@ manage_users_router = APIRouter()
 
 
 async def get_user_or_404(
-        user_id: str,
+        user_id: int,
         user_manager: BaseUserManager = Depends(get_user_manager),
 ) -> User:
     try:
@@ -81,10 +81,6 @@ async def update_me(
             # Check whether user changed section_id to valid one
             await check_section_valid(section_id=user_update.section_id, session=session)
 
-        # Check whether user entered correct role_id
-        if not await get_sections_id_db(section_id=user_update.role_id, session=session) or verified_user.role_id == 1:
-            user_update.role_id = 1
-
         verified_user = await user_manager.update(
             user_update, verified_user, safe=True, request=request
         )
@@ -115,26 +111,27 @@ async def update_me(
 
 
 @manage_users_router.get(
-    "/{id}",
+    path="/id",
     response_model=UserRead,
     dependencies=[Depends(current_superuser)],
     name="users:user",
     responses=GET_DELETE_USER_ID_RESPONSE
 )
-async def get_user(user=Depends(get_user_or_404)):
+async def get_user(user_id: int, user=Depends(get_user_or_404)):
     return UserRead.from_orm(user)
 
 
 @manage_users_router.patch(
-    "/{id}",
+    "/by_admin",
     response_model=UserRead,
     dependencies=[Depends(current_superuser)],
-    name="users:patch_user",
+    name="users:patch other users by id",
     responses=PATCH_USER_ID_RESPONSE
 )
 async def update_user(
         user_update: UserAdminUpdate,  # type: ignore
         request: Request,
+        user_id: int,
         user=Depends(get_user_or_404),
         user_manager: BaseUserManager = Depends(get_user_manager),
 ):
@@ -161,7 +158,7 @@ async def update_user(
 
 
 @manage_users_router.delete(
-    "/{id}",
+    path="/user",
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
     dependencies=[Depends(current_superuser)],
@@ -169,6 +166,7 @@ async def update_user(
     responses=GET_DELETE_USER_ID_RESPONSE
 )
 async def delete_user(
+        user_id: int,
         user_for_delete=Depends(get_user_or_404),
         user_manager: BaseUserManager = Depends(get_user_manager),
         session: AsyncSession = Depends(get_async_session)
