@@ -252,7 +252,7 @@ async def delete_question(list_question_id: list[int], verified_user: User = Dep
 
 
 @question_router.post(
-    path="/active",
+    path="/deactivate",
     name="question: make question inactive",
     dependencies=[Depends(HTTPBearer())],
     responses=DELETE_QUESTION_RESPONSES

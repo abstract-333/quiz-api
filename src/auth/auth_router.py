@@ -27,7 +27,6 @@ auth_router.include_router(
     dependencies=[Depends(HTTPBearer())]
 )
 
-#TODO DELETE USER & PATCH USER(LIMIT SUPERVISOR CHANGING SECTION_ID AND LIMIT STUDENT CHANGING UNIVERISTY_ID)
 
 #
 # @router.post("/login")
