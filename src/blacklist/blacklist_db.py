@@ -24,7 +24,7 @@ async def get_blacklist_user_db(user_id: int, session: AsyncSession):
 async def add_blacklist_user_db(blacklist_create: BlacklistCreate, session: AsyncSession):
     """Add user to blacklist"""
 
-    stmt = insert(blacklist).values(**blacklist_create.dict())
+    stmt = insert(blacklist).values(**blacklist_create.model_dump())
     await session.execute(stmt)
     await session.commit()
 
@@ -32,7 +32,7 @@ async def add_blacklist_user_db(blacklist_create: BlacklistCreate, session: Asyn
 async def update_blacklist_user_level_db(blacklist_updated: BlacklistUpdate, user_id: int, session: AsyncSession):
     """Raise level of blocked user"""
 
-    stmt = update(blacklist).values(**blacklist_updated.dict()).where(blacklist.c.user_id == user_id)
+    stmt = update(blacklist).values(**blacklist_updated.model_dump()).where(blacklist.c.user_id == user_id)
     await session.execute(stmt)
     await session.commit()
 

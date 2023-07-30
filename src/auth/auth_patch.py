@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from fastapi_users import exceptions
+from fastapi_users import exceptions, schemas
 from fastapi_users.manager import BaseUserManager
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +14,8 @@ from feedback.feedback_db import delete_feedback_by_question_author_db
 from question.question_db import get_questions_id_db, delete_all_questions_db
 from rating.rating_db import get_rating_user_id, delete_rating_db
 from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
-from section.section_db import get_sections_id_db, check_section_valid
+
+from section.section_depedency import section_service_dependency
 from university.university_db import check_university_valid
 from utilties.custom_exceptions import OutOfUniversityIdException, NotAllowedPatching, OutOfSectionIdException
 from utilties.error_code import ErrorCode
@@ -43,7 +44,7 @@ async def get_user_or_404(
 async def me(
         user: User = Depends(current_user),
 ):
-    return UserRead.from_orm(user)
+    return schemas.model_validate(UserRead, obj=user)
 
 
 @manage_users_router.patch(
@@ -79,12 +80,15 @@ async def update_me(
                 raise NotAllowedPatching
 
             # Check whether user changed section_id to valid one
-            await check_section_valid(section_id=user_update.section_id, session=session)
+            section_result = await section_service_dependency().get_section_by_id(section_id=user_update.section_id)
+
+            if not section_result:
+                raise OutOfSectionIdException
 
         verified_user = await user_manager.update(
             user_update, verified_user, safe=True, request=request
         )
-        return UserRead.from_orm(verified_user)
+        return schemas.model_validate(UserRead,obj=verified_user)
 
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(
@@ -118,7 +122,7 @@ async def update_me(
     responses=GET_DELETE_USER_ID_RESPONSE
 )
 async def get_user(user_id: int, user=Depends(get_user_or_404)):
-    return UserRead.from_orm(user)
+    return schemas.model_validate(UserRead,obj=user)
 
 
 @manage_users_router.patch(
@@ -139,7 +143,7 @@ async def update_user(
         user = await user_manager.update(
             user_update, user, safe=False, request=request
         )
-        return UserRead.from_orm(user)
+        return schemas.model_validate(UserRead,obj=user)
 
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(

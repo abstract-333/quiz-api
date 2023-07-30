@@ -14,7 +14,8 @@ from question.question_db import get_questions_id_db, get_questions_section_db, 
     update_question_db, get_question_id_db, get_questions_duplicated_db, insert_question_db, \
     delete_question_db, get_question_ref, update_question_active_db
 from rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
-from section.section_db import check_section_valid
+
+from section.section_depedency import section_service_dependency
 from utilties.custom_exceptions import DuplicatedQuestionException, UserNotAdminSupervisor, OutOfSectionIdException, \
     AnswerNotIncluded, NumberOfChoicesNotFour, InvalidPage, QuestionNotExists, NotAllowed, QuestionNotEditable
 from utilties.error_code import ErrorCode
@@ -116,7 +117,10 @@ async def get_question_section_id(section_id: int, page: int = 1, verified_user:
         if page < 1:
             raise InvalidPage
 
-        await check_section_valid(section_id=section_id, session=session)
+        section_result = await section_service_dependency().get_section_by_id(section_id=section_id)
+
+        if not section_result:
+            raise OutOfSectionIdException
 
         if verified_user.role_id == 3:
             # If user is admin then return all question(active or not)
@@ -173,32 +177,12 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
             if abs(remaining_time) > 15:
                 raise QuestionNotEditable
 
-        if (Counter(question_old[0]["choices"]), question_old[0]["question_title"], question_old[0]["answer"],
-            question_old[0]["reference"], question_old[0]["reference_link"]) == (
-                Counter(edited_question.choices), edited_question.question_title,
-                edited_question.answer, edited_question.reference, edited_question.reference_link):
-            return {"status": "success",
-                    "data": edited_question,
-                    "details": None
-                    }
-
-        result = await get_questions_duplicated_db(question_title=edited_question.question_title,
-                                                   question_id=question_id,
-                                                   session=session)
-
-        for element in result:
-            if (Counter(element["choices"]), element["question_title"], element["answer"], element["reference"],
-                element["reference_link"]) == (
-                    Counter(edited_question.choices), edited_question.question_title,
-                    edited_question.answer, edited_question.reference, edited_question.reference_link):
-                raise DuplicatedQuestionException
-
         question_update = QuestionUpdate(question_title=edited_question.question_title,
                                          choices=list(edited_question.choices),
                                          answer=edited_question.answer,
                                          reference=edited_question.reference,
                                          reference_link=edited_question.reference_link,
-                                         active=question_old[0]["active"]
+                                         active=edited_question.active
                                          )
 
         await update_question_db(question_id=question_id, question_update=question_update, session=session)

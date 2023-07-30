@@ -1,12 +1,13 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_cache.decorator import cache
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
-from database import get_async_session
 from rating.rating_docs import SERVER_ERROR_UNAUTHORIZED_RESPONSE
-from section.section_db import get_sections_db
+from section.section_service import SectionService
+from section.section_depedency import section_service_dependency
 
 section_router = APIRouter(
     prefix="/section",
@@ -17,11 +18,14 @@ section_router = APIRouter(
 @cache(expire=100)
 @section_router.get("/get-all", name="section:section get-all",
                     responses=SERVER_ERROR_UNAUTHORIZED_RESPONSE)
-async def get_sections(request: Request, response: Response,
-                       session: AsyncSession = Depends(get_async_session)) -> dict:
-    """get all sections"""
+async def get_sections(
+        request: Request,
+        response: Response,
+        section_service: Annotated[SectionService, Depends(section_service_dependency)],
+) -> dict:
+    """Get all sections"""
     try:
-        sections = await get_sections_db(session=session)
+        sections = await section_service.get_sections()
 
         return {"status": "success",
                 "data": sections,

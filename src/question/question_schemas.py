@@ -32,7 +32,7 @@ class QuestionUpdate(BaseModel):
     choices: list
     answer: str
     reference: str
-    reference_link: Optional[str]
+    reference_link: Optional[str] = None
     active: bool
 
 

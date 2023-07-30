@@ -1,14 +1,6 @@
 from sqladmin import Admin
-from auth.auth_router import auth_router
-from feedback.feedback_router import feedback_router
-from question.question_router import question_router
-from quiz.quiz_router import quiz_router
-from rating.rating_router import rating_router
-from section.section_router import section_router
-from university.university_router import university_router
+from all_routers_views import all_routers, all_admin_views
 from admin.admin_auth import AdminAuth
-from admin.admin_schemas import UserAdmin, UniversityAdmin, SectionAdmin, RoleAdmin, \
-    QuestionAdmin, FeedbackAdmin, RatingAdmin, BlacklistAdmin, BlockedLevelAdmin, WarningAdmin
 from config import SECRET_KEY
 from database import engine
 from redis import asyncio as aioredis
@@ -34,10 +26,6 @@ app: FastAPI = FastAPI(
 #     allow_credentials=True,
 # )
 
-# app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-# app.add_middleware(SlowAPIMiddleware)
-# limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"],
-#                   storage_uri="redis://localhost:6379")
 
 authentication_backend = AdminAuth(secret_key=SECRET_KEY)
 admin = Admin(app=app, engine=engine, authentication_backend=authentication_backend)
@@ -57,41 +45,10 @@ async def startup_event():
 @app.on_event("shutdown")
 async def startup_event():
     await FastAPICache.clear()
-    # await FastAPILimiter.close()
 
 
-admin.add_view(UserAdmin)
-admin.add_view(RoleAdmin)
-admin.add_view(QuestionAdmin)
-admin.add_view(RatingAdmin)
-admin.add_view(FeedbackAdmin)
-admin.add_view(SectionAdmin)
-admin.add_view(UniversityAdmin)
-admin.add_view(BlockedLevelAdmin)
-admin.add_view(BlacklistAdmin)
-admin.add_view(WarningAdmin)
+for view in all_admin_views:
+    admin.add_view(view)
 
-app.include_router(auth_router)
-app.include_router(question_router)
-app.include_router(quiz_router)
-app.include_router(rating_router)
-app.include_router(feedback_router)
-app.include_router(section_router)
-app.include_router(university_router)
-# @app.get("/")
-# async def get_address(request: Request):
-#     if not throttler.consume(identifier="user_id"):
-#         return "NULLLLLLLLLL"
-#     ip_address = request.client.host
-#     ip_address = "78.110.106.250"
-#
-#     params = urllib.parse.urlencode({
-#         'key': f'{API_KEY}',
-#         'ip': f'{ip_address}',
-#         # 'localityLanguage': 'ar',
-#     })
-#     async with aiohttp.ClientSession() as session:
-#         async with session.get('https://api-bdc.net/data/country-by-ip', params=params) as response:
-#             data = await response.json()
-#
-#     return data
+for router in all_routers:
+    app.include_router(router)

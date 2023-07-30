@@ -26,7 +26,7 @@ class FeedbackCreate(BaseModel):
 
 class FeedbackUpdate(BaseModel):
     rating: int
-    feedback_title: Optional[str]
+    feedback_title: Optional[str] = None
 
 
 class Feedback(Base):

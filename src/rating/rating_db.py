@@ -34,14 +34,14 @@ async def get_last_rating_user(user_id: int, session: AsyncSession):
 async def update_rating_db(rating_id: int, updated_rating: RatingUpdate, session: AsyncSession):
     # update rating
 
-    stmt = update(rating).values(**updated_rating.dict()).where(rating.c.id == rating_id)
+    stmt = update(rating).values(**updated_rating.model_dump()).where(rating.c.id == rating_id)
     await session.execute(stmt)
     await session.commit()
 
 
 async def insert_rating_db(rating_create: RatingCreate, session: AsyncSession):
     # insert rating
-    stmt = insert(rating).values(**rating_create.dict())
+    stmt = insert(rating).values(**rating_create.model_dump())
     await session.execute(stmt)
     await session.commit()
 

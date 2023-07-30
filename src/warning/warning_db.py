@@ -29,7 +29,7 @@ async def add_warning_db(
 ) -> None:
     """Add user to warning list"""
 
-    stmt = insert(warning).values(**warning_create.dict())
+    stmt = insert(warning).values(**warning_create.model_dump())
     await session.execute(stmt)
     await session.commit()
 
@@ -38,9 +38,9 @@ async def update_warning_level_db(
         warning_updated: WarningUpdate,
         session: AsyncSession
 ) -> None:
-    """Raise level of warning user"""
+    """Update level of warning user"""
 
-    stmt = update(warning).values(**warning_updated.dict()).where(warning.c.user_id == warning_updated.user_id)
+    stmt = update(warning).values(**warning_updated.model_dump()).where(warning.c.user_id == warning_updated.user_id)
     await session.execute(stmt)
     await session.commit()
 

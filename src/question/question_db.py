@@ -71,7 +71,7 @@ async def get_question_id_db(question_id: int, session: AsyncSession):
 async def update_question_db(question_id: int, question_update: QuestionUpdate, session: AsyncSession):
     # Update question by question_id
 
-    stmt = update(question).values(**question_update.dict()).where(question.c.id == question_id)
+    stmt = update(question).values(**question_update.model_dump()).where(question.c.id == question_id)
     await session.execute(stmt)
     await session.commit()
 
@@ -96,7 +96,7 @@ async def get_questions_duplicated_db(question_title: str, question_id: int, ses
 
 
 async def insert_question_db(question_create: QuestionCreate, session: AsyncSession):
-    stmt = insert(question).values(**question_create.dict())
+    stmt = insert(question).values(**question_create.model_dump())
     await session.execute(stmt)
     await session.commit()
 

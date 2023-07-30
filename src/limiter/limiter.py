@@ -7,28 +7,8 @@ from token_throttler.storage.redis import RedisStorageAsync
 from auth.auth_models import User
 from auth.base_config import unverified_user
 from redis import asyncio as aioredis
-
 from utilties.error_code import ErrorCode
 
-
-# async def monitor_server_load():
-#     while True:
-#         # Monitor the server's CPU and memory usage
-#         cpu_usage = psutil.cpu_percent() * 10
-#         cpu_usage = abs(cpu_usage - 100)
-#         memory_usage = psutil.virtual_memory().percent
-#         virtual_memory = psutil.virtual_memory().available
-#         virtual_memory = virtual_memory / (1024 ** 3)
-#         print(cpu_usage)
-#         print(virtual_memory)
-#         # Estimate the maximum number of requests the server can handle per second
-#         max_requests_per_second = int(0.8 * (psutil.cpu_count() or 1) * cpu_usage / 100 + 0.2
-#                                       * virtual_memory)
-#
-#         print(max_requests_per_second)
-#
-#         # Check the sever load every 5 seconds
-#         await asyncio.sleep(5)
 
 class BucketLimiter:
     def __init__(
@@ -130,7 +110,6 @@ class BucketLimiter:
             throttler = self.throttler
             dependency_index = await self._get_dependency_index(request=request)
             ip_address = request.client.host
-            print(throttler._storage.buckets.items())
 
             # Limit unauthenticated user by ip address
             if not unknown_user or not unknown_user.is_verified:
