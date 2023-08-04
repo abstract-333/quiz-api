@@ -8,14 +8,14 @@ import os
 sys.path.append(os.path.join(sys.path[0], "src"))
 
 from src.config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
-from src.section.section_models import metadata as metadata_section
-from src.university.university_models import metadata as metadata_university
-from src.auth.auth_models import metadata as metadata_auth
-from src.question.question_models import metadata as metadata_question
-from src.feedback.feedback_models import metadata as metadata_feedback
-from src.rating.rating_models import metadata as metadata_rating
-from src.blacklist.blacklist_models import metadata as metadata_blacklist
-from src.warning.warning_models import metadata as metadata_warning
+from api.section.section_models import metadata as metadata_section
+from api.university.university_models import metadata as metadata_university
+from api.auth.auth_models import metadata as metadata_auth
+from api.question.question_models import metadata as metadata_question
+from api.feedback.feedback_models import metadata as metadata_feedback
+from api.rating.rating_models import metadata as metadata_rating
+from api.blacklist.blacklist_models import metadata as metadata_blacklist
+from api.warning.warning_models import metadata as metadata_warning
 config = context.config
 
 section = config.config_ini_section

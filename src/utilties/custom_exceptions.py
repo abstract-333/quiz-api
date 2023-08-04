@@ -117,6 +117,12 @@ class BlockedReturnAfter(Exception):
     """YOU_ARE_BLOCKED_NOW"""
     pass
 
+
 class EmptyList(Exception):
     """EMPTY_LIST"""
+    pass
+
+
+class NothingFound(Exception):
+    """NO_ROW_FOUND"""
     pass

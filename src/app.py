@@ -1,7 +1,7 @@
 from sqladmin import Admin
 
 from all_routers_views import all_routers, all_admin_views
-from admin.admin_auth import AdminAuth
+from api.admin_panel.admin_auth import AdminAuth
 from config import SECRET_KEY
 from database import engine
 from redis import asyncio as aioredis
