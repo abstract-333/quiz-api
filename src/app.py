@@ -1,4 +1,5 @@
 from sqladmin import Admin
+
 from all_routers_views import all_routers, all_admin_views
 from admin.admin_auth import AdminAuth
 from config import SECRET_KEY
@@ -6,7 +7,7 @@ from database import engine
 from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 
 app: FastAPI = FastAPI(
     title="Quiz App",
@@ -25,7 +26,7 @@ app: FastAPI = FastAPI(
 #     expose_headers=["X-Total-Count"],
 #     allow_credentials=True,
 # )
-
+#
 
 authentication_backend = AdminAuth(secret_key=SECRET_KEY)
 admin = Admin(app=app, engine=engine, authentication_backend=authentication_backend)
