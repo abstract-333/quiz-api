@@ -1,5 +1,5 @@
 from api.university.university_schames import University
-from common.repository import SQLAlchemyRepository
+from common.sqlalchemy_repository import SQLAlchemyRepository
 
 
 class UniversityRepository(SQLAlchemyRepository):

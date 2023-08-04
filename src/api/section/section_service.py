@@ -1,6 +1,6 @@
+from common.repository import AbstractRepository
 from utilties.custom_exceptions import OutOfSectionIdException
 from api.section.section_schemas import SectionSchema
-from common.repository import AbstractRepository
 
 
 class SectionService:
