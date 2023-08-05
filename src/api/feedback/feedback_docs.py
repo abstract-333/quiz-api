@@ -118,7 +118,7 @@ PATCH_FEEDBACK_RESPONSES: OpenAPIResponseType = {
             "application/json": {
                 "examples": {ErrorCode.FEEDBACK_NOT_EDITABLE: {
                     "summary": "You can't edit feedback now",
-                    "value": {"detail": "You can edit the feedback for 15 minutes after you sent it"},
+                    "value": {"detail": "You can edit the feedback during 15 minutes after you send it"},
                 },
                     ErrorCode.NOT_ALLOWED_PATCH_FEEDBACK: {
                         "summary": "Patch feedback not allowed",
