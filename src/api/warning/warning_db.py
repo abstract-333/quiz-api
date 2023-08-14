@@ -3,9 +3,9 @@ import itertools
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from utilties.result_into_list import ResultIntoList
 from api.warning.warning_models import warning
 from api.warning.warning_schemas import WarningCreate, WarningUpdate
+from utilties.result_into_list import ResultIntoList
 
 
 async def get_warning_db(

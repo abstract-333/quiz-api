@@ -1,6 +1,6 @@
 from api.university.university_schames import University
-from common.sqlalchemy_repository import SQLAlchemyRepository
+from core.repository import SQLAlchemyRepository
 
 
 class UniversityRepository(SQLAlchemyRepository):
-    model = University
+    main_model = University

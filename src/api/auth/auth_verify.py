@@ -1,8 +1,8 @@
 from fastapi import Depends, Body, APIRouter, HTTPException
+from fastapi import Request
 from fastapi_users import exceptions, BaseUserManager
 from pydantic import EmailStr
 from starlette import status
-from fastapi import Request
 
 from api.auth.auth_docs import REQUEST_VERIFY_EMAIL_RESPONSE, VERIFY_EMAIL_RESPONSE
 from api.auth.auth_manager import get_user_manager

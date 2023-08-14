@@ -1,5 +1,6 @@
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
+
 from api.auth.auth_manager import get_user_manager
 from api.auth.auth_models import User
 from config import SECRET_KEY
@@ -26,3 +27,4 @@ fastapi_users = FastAPIUsers[User, int](
 current_user = fastapi_users.current_user(verified=True)
 current_superuser = fastapi_users.current_user(verified=True, superuser=True)
 unverified_user = fastapi_users.current_user(optional=True)
+

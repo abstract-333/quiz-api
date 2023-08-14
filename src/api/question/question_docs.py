@@ -87,9 +87,9 @@ PATCH_QUESTION_RESPONSES: OpenAPIResponseType = {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.QUESTION_NOT_EXISTS: {
+                "examples": {ErrorCode.QUESTION_NOT_FOUND: {
                     "summary": "Question not exists",
-                    "value": {"detail": ErrorCode.QUESTION_NOT_EXISTS},
+                    "value": {"detail": ErrorCode.QUESTION_NOT_FOUND},
                 }
                 }
             }
@@ -181,9 +181,9 @@ DELETE_QUESTION_RESPONSES: OpenAPIResponseType = {
         "model": ErrorModel,
         "content": {
             "application/json": {
-                "examples": {ErrorCode.QUESTION_NOT_EXISTS: {
+                "examples": {ErrorCode.QUESTION_NOT_FOUND: {
                     "summary": "Question not exists",
-                    "value": {"detail": ErrorCode.QUESTION_NOT_EXISTS},
+                    "value": {"detail": ErrorCode.QUESTION_NOT_FOUND},
                 }
                 }
             }

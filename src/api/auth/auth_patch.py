@@ -1,7 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
 from fastapi_users import exceptions, schemas
 from fastapi_users.manager import BaseUserManager
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,17 +7,15 @@ from api.auth.auth_docs import GET_DELETE_USER_ID_RESPONSE, PATCH_USER_ID_RESPON
 from api.auth.auth_manager import get_user_manager
 from api.auth.auth_models import User
 from api.auth.auth_schemas import UserRead, UserUpdate, UserAdminUpdate
-from api.auth.base_config import current_user, current_superuser
-from database import get_async_session
+from api.auth.base_config import current_user
 from api.feedback.feedback_db import delete_feedback_by_question_author_db
 from api.question.question_db import get_questions_id_db, delete_all_questions_db
 from api.rating.rating_db import get_rating_user_id, delete_rating_db
 from api.rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
-
-from api.section.section_depedency import section_service_dependency
 from api.section.section_service import SectionService
-from api.university.university_dependency import university_service_dependency
 from api.university.unviversity_service import UniversityService
+from core.dependecies import UOWDep, CurrentUser, CurrentSuperUser
+from database import get_async_session
 from utilties.custom_exceptions import OutOfUniversityIdException, NotAllowedPatching, OutOfSectionIdException
 from utilties.error_code import ErrorCode
 
@@ -28,7 +23,7 @@ manage_users_router = APIRouter()
 
 
 async def get_user_or_404(
-        user_id: int,
+        user_id: int = Query(gt=0),
         user_manager: BaseUserManager = Depends(get_user_manager),
 ) -> User:
     try:
@@ -46,7 +41,7 @@ async def get_user_or_404(
     responses=SERVER_ERROR_AUTHORIZED_RESPONSE
 )
 async def me(
-        user: User = Depends(current_user),
+        user: CurrentUser,
 ):
     return schemas.model_validate(UserRead, obj=user)
 
@@ -61,18 +56,17 @@ async def me(
 async def update_me(
         request: Request,
         user_update: UserUpdate,  # type: ignore
-        section_service: Annotated[SectionService, Depends(section_service_dependency)],
-        university_service: Annotated[UniversityService, Depends(university_service_dependency)],
-        verified_user: User = Depends(current_user),
+        uow: UOWDep,
+        verified_user: CurrentUser,
         user_manager: BaseUserManager = Depends(get_user_manager),
         session: AsyncSession = Depends(get_async_session),
 ):
     try:
         # Check whether user changed university_id to valid one
-        await university_service.get_university_by_id(university_id=user_update.university_id)
+        await UniversityService().get_university_by_id(uow=uow, university_id=user_update.university_id)
 
         # Check whether user changed section_id to valid one
-        await section_service.get_section_by_id(section_id=user_update.section_id)
+        await SectionService().get_section_by_id(uow=uow, section_id=user_update.section_id)
 
         if verified_user.role_id == 1 and user_update.university_id != verified_user.university_id:
             # Prevent user from changing own university if he had taken quiz before
@@ -120,36 +114,36 @@ async def update_me(
 @manage_users_router.get(
     path="/id",
     response_model=UserRead,
-    dependencies=[Depends(current_superuser)],
     name="users:user",
     responses=GET_DELETE_USER_ID_RESPONSE
 )
-async def get_user(user_id: int, user=Depends(get_user_or_404)):
+async def get_user(
+        current_superuser: CurrentSuperUser,
+        user=Depends(get_user_or_404)
+):
     return schemas.model_validate(UserRead, obj=user)
 
 
 @manage_users_router.patch(
     "/by_admin",
     response_model=UserRead,
-    dependencies=[Depends(current_superuser)],
     name="users:patch other users by id",
     responses=PATCH_USER_ID_RESPONSE
 )
 async def update_user(
         user_update: UserAdminUpdate,  # type: ignore
         request: Request,
-        section_service: Annotated[SectionService, Depends(section_service_dependency)],
-        university_service: Annotated[UniversityService, Depends(university_service_dependency)],
-        user_id: int,
+        current_superuser: CurrentSuperUser,
+        uow: UOWDep,
         user=Depends(get_user_or_404),
         user_manager: BaseUserManager = Depends(get_user_manager),
 ):
     try:
         # Check whether user changed university_id to valid one
-        await university_service.get_university_by_id(university_id=user_update.university_id)
+        await UniversityService().get_university_by_id(uow=uow, university_id=user_update.university_id)
 
         # Check whether user changed section_id to valid one
-        await section_service.get_section_by_id(section_id=user_update.section_id)
+        await SectionService().get_section_by_id(uow=uow, section_id=user_update.section_id)
 
         user = await user_manager.update(
             user_update, user, safe=False, request=request
@@ -182,12 +176,11 @@ async def update_user(
     path="/user",
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
-    dependencies=[Depends(current_superuser)],
     name="users:delete_user",
     responses=GET_DELETE_USER_ID_RESPONSE
 )
 async def delete_user(
-        user_id: int,
+        current_superuser: CurrentSuperUser,
         user_for_delete=Depends(get_user_or_404),
         user_manager: BaseUserManager = Depends(get_user_manager),
         session: AsyncSession = Depends(get_async_session)

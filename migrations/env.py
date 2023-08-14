@@ -5,16 +5,16 @@ from alembic import context
 import sys
 import os
 
+
 sys.path.append(os.path.join(sys.path[0], "src"))
 
 from src.config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
-from api.section.section_models import metadata as metadata_section
 from api.university.university_models import metadata as metadata_university
 from api.auth.auth_models import metadata as metadata_auth
 from api.question.question_models import metadata as metadata_question
 from api.feedback.feedback_models import metadata as metadata_feedback
 from api.rating.rating_models import metadata as metadata_rating
-from api.blacklist.blacklist_models import metadata as metadata_blacklist
+from api.blacklist.blacklist_models import Base
 from api.warning.warning_models import metadata as metadata_warning
 config = context.config
 
@@ -33,8 +33,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [metadata_section, metadata_university, metadata_auth, metadata_question,
-                   metadata_feedback, metadata_rating, metadata_blacklist, metadata_warning]
+target_metadata = [metadata_university, metadata_auth, metadata_question, metadata_feedback,
+                   metadata_rating,  metadata_warning, Base.metadata]
 
 
 # other values from the config, defined by the needs of env.py,

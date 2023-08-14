@@ -6,8 +6,8 @@ from sqlalchemy import Integer, Column, String, TIMESTAMP, ForeignKey
 from sqlalchemy.dialects.mysql import SMALLINT
 
 from api.auth.auth_models import user
-from database import Base
 from api.question.question_models import question
+from database import Base
 
 
 class FeedbackRead(BaseModel):

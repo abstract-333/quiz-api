@@ -7,54 +7,20 @@ from fastapi_users.jwt import decode_jwt
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import HTMLResponse
+
 from api.auth.auth_models import User
 from api.auth.auth_schemas import UserCreate
 from config import SECRET_KEY
 from database import get_async_session
-from utilties.password_manager import PasswordManager
 from utilties.constants import Constants
 from utilties.email import send_email
+from utilties.password_manager import PasswordManager
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     _SECRET = SECRET_KEY
     reset_password_token_secret = _SECRET
     verification_token_secret = _SECRET
-
-    # async def authenticate(
-    #         self, credentials: ExtendedOAuth2PasswordRequestForm,
-    #         session: AsyncSession = Depends(get_async_session)
-    # ) -> Optional[bool]:
-    #     """
-    #     Authenticate and return a user following an email and a password.
-    #
-    #     Will automatically upgrade password hash if necessary.
-    #
-    #     :param session:
-    #     :param credentials: The user credentials.
-    #     """
-    #     query = select(user).where(user.c.student_id == credentials.student_id)
-    #     try:
-    #         result_proxy = await session.execute(query)
-    #         user_new = result_proxy.first()
-    #         if user_new is None:
-    #             self.password_helper.hash(credentials.password)
-    #             raise exceptions.UserNotExists()
-    #
-    #     except exceptions.UserNotExists:
-    #         # Run the hasher to mitigate timing attack
-    #         # Inspired from Django: https://code.djangoproject.com/ticket/20760
-    #         return None
-    #     verified, updated_password_hash = self.password_helper.verify_and_update(
-    #         credentials.password, user_new.hashed_password
-    #     )
-    #     if not verified:
-    #         return None
-    #     # Update password hash to a more robust one if needed
-    #     if updated_password_hash is not None:
-    #         await self.user_db.update(user_new, {"hashed_password": updated_password_hash})
-    #
-    #     return user_new
 
     async def validate_password(
             self,

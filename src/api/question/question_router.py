@@ -1,26 +1,16 @@
 from collections import Counter
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from api.auth.base_config import current_user, current_superuser
-from api.auth.auth_models import User
-from database import get_async_session
+
+from api.auth.base_config import current_superuser
 from api.feedback.feedback_db import (
     check_feedback_question_id,
     delete_feedback_question_id,
     get_remaining_time
 )
-from api.question.question_docs import (
-    ADD_QUESTION_RESPONSES,
-    GET_QUESTION_RESPONSES,
-    GET_QUESTION_SECTION_RESPONSES,
-    PATCH_QUESTION_RESPONSES,
-    DELETE_QUESTION_RESPONSES
-)
-from api.question.question_schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from api.question.question_db import (
     get_questions_id_db,
     get_questions_section_db,
@@ -32,9 +22,20 @@ from api.question.question_db import (
     get_question_ref,
     update_question_active_db
 )
+from api.question.question_docs import (
+    ADD_QUESTION_RESPONSES,
+    GET_QUESTION_RESPONSES,
+    GET_QUESTION_SECTION_RESPONSES,
+    PATCH_QUESTION_RESPONSES,
+    DELETE_QUESTION_RESPONSES
+)
+from api.question.question_errors import Errors as QuestionErrors
+from api.question.question_schemas import QuestionCreate, QuestionRead, QuestionUpdate
 from api.rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
-from api.section.section_depedency import section_service_dependency
+from api.section.section_errors import Errors as SectionErrors
 from api.section.section_service import SectionService
+from core.dependecies import UOWDep, CurrentUser
+from database import get_async_session
 from utilties.custom_exceptions import (
     DuplicatedQuestionException,
     UserNotAdminSupervisor,
@@ -42,11 +43,10 @@ from utilties.custom_exceptions import (
     AnswerNotIncluded,
     NumberOfChoicesNotFour,
     InvalidPage,
-    QuestionNotExists,
+    QuestionNotFound,
     NotAllowed,
     QuestionNotEditable
 )
-from utilties.error_code import ErrorCode
 
 question_router = APIRouter(
     prefix="/question",
@@ -69,7 +69,7 @@ async def check_question_validity_user_grants(received_question: QuestionRead, r
 
 @question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
                       responses=ADD_QUESTION_RESPONSES)
-async def add_question(added_question: QuestionRead, verified_user: User = Depends(current_user),
+async def add_question(added_question: QuestionRead, verified_user: CurrentUser,
                        session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
 
@@ -101,16 +101,16 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
                 }
 
     except NumberOfChoicesNotFour:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR)
+        raise QuestionErrors.number_choices_not_four_400
 
     except AnswerNotIncluded:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
+        raise QuestionErrors.answer_not_included_choices_400
 
     except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+        raise QuestionErrors.user_not_allowed_405
 
     except DuplicatedQuestionException:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
+        raise QuestionErrors.duplicated_question_409
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -118,8 +118,11 @@ async def add_question(added_question: QuestionRead, verified_user: User = Depen
 
 @question_router.get("/me", name="question:get question-mine", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_RESPONSES)
-async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_async_session),
-                          verified_user: User = Depends(current_user)) -> dict:
+async def get_question_me(
+        verified_user: CurrentUser,
+        page: int = Query(gt=0, default=1),
+        session: AsyncSession = Depends(get_async_session),
+) -> dict:
     try:
         if page < 1:
             raise InvalidPage
@@ -131,7 +134,7 @@ async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_asy
                 "detail": None}
 
     except InvalidPage:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.INVALID_PAGE)
+        raise QuestionErrors.invalid_page_number_400
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -140,16 +143,17 @@ async def get_question_me(page: int = 1, session: AsyncSession = Depends(get_asy
 @question_router.get("/get", name="question:get question", dependencies=[Depends(HTTPBearer())],
                      responses=GET_QUESTION_SECTION_RESPONSES)
 async def get_question_section_id(
-        section_id: int,
-        section_service: Annotated[SectionService, Depends(section_service_dependency)],
-        page: int = 1,
-        verified_user: User = Depends(current_user),
-        session: AsyncSession = Depends(get_async_session)) -> dict:
+        uow: UOWDep,
+        verified_user: CurrentUser,
+        section_id: int = Query(gt=0),
+        page: int = Query(gt=0, default=1),
+        session: AsyncSession = Depends(get_async_session)
+) -> dict:
     try:
         if page < 1:
             raise InvalidPage
 
-        await section_service.get_section_by_id(section_id=section_id)
+        await SectionService().get_section_by_id(uow=uow, section_id=section_id)
 
         if verified_user.role_id == 3:
             # If user is admin_panel then return all question(active or not)
@@ -173,10 +177,10 @@ async def get_question_section_id(
                 "detail": None}
 
     except InvalidPage:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.INVALID_PAGE)
+        raise QuestionErrors.invalid_page_number_400
 
     except OutOfSectionIdException:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.OUT_OF_SECTION_ID)
+        raise SectionErrors.invalid_section_400
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -184,16 +188,20 @@ async def get_question_section_id(
 
 @question_router.patch("/patch", name="question: patch question", dependencies=[Depends(HTTPBearer())],
                        responses=PATCH_QUESTION_RESPONSES)
-async def patch_question(question_id: int, edited_question: QuestionRead, verified_user: User = Depends(current_user),
-                         session: AsyncSession = Depends(get_async_session)) -> dict:
+async def patch_question(
+        edited_question: QuestionRead,
+        verified_user: CurrentUser,
+        question_id: int = Query(gt=0),
+        session: AsyncSession = Depends(get_async_session)
+) -> dict:
     try:
 
-        await check_question_validity_user_grants(edited_question, verified_user)
+        await check_question_validity_user_grants(edited_question, verified_user.role_id)
 
         question_old = await get_question_id_db(question_id=question_id, session=session)
 
         if not question_old:
-            raise QuestionNotExists
+            raise QuestionNotFound
 
         if question_old[0]["added_by"] != verified_user.id and verified_user.role_id != 3:
             raise NotAllowed
@@ -222,26 +230,25 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
                 }
 
     except NumberOfChoicesNotFour:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.NUMBER_OF_CHOICES_NOT_FOUR)
+        raise QuestionErrors.number_choices_not_four_400
 
     except AnswerNotIncluded:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.ANSWER_NOT_INCLUDED_IN_CHOICES)
+        raise QuestionErrors.answer_not_included_choices_400
 
-    except QuestionNotExists:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
+    except QuestionNotFound:
+        raise QuestionErrors.question_not_found_404
 
     except NotAllowed:
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.NOT_QUESTION_OWNER)
+        raise QuestionErrors.not_question_owner_405
 
     except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+        raise QuestionErrors.user_not_allowed_405
 
     except QuestionNotEditable:
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-                            detail="You can edit the question for 30 minutes after you sent it")
+        raise QuestionErrors.question_not_editable_405
 
     except DuplicatedQuestionException:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ErrorCode.QUESTION_DUPLICATED)
+        raise QuestionErrors.duplicated_question_409
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -249,8 +256,10 @@ async def patch_question(question_id: int, edited_question: QuestionRead, verifi
 
 @question_router.post("/wrong_solved/ref", name="question: get reference", dependencies=[Depends(HTTPBearer())],
                       responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
-async def delete_question(list_question_id: list[int], verified_user: User = Depends(current_user),
-                          session: AsyncSession = Depends(get_async_session)) -> dict:
+async def get_wrong_solved(
+        verified_user: CurrentUser,
+        list_question_id: list[int],
+        session: AsyncSession = Depends(get_async_session)) -> dict:
     try:
 
         questions = await get_question_ref(list_questions=list_question_id, session=session)
@@ -271,8 +280,8 @@ async def delete_question(list_question_id: list[int], verified_user: User = Dep
     responses=DELETE_QUESTION_RESPONSES
 )
 async def make_question_inactive(
-        question_id: int,
-        verified_user: User = Depends(current_user),
+        verified_user: CurrentUser,
+        question_id: int = Query(gt=0),
         session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
@@ -280,7 +289,7 @@ async def make_question_inactive(
         question_processed = await get_question_id_db(question_id=question_id, session=session)
 
         if not question_processed:
-            raise QuestionNotExists
+            raise QuestionNotFound
 
         await update_question_active_db(
             question_id=question_id,
@@ -292,8 +301,8 @@ async def make_question_inactive(
                 "details": None
                 }
 
-    except QuestionNotExists:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
+    except QuestionNotFound:
+        raise QuestionErrors.question_not_found_404
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -306,7 +315,7 @@ async def make_question_inactive(
     responses=DELETE_QUESTION_RESPONSES
 )
 async def delete_question(
-        question_id: int,
+        question_id: int = Query(gt=0),
         session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
@@ -316,7 +325,7 @@ async def delete_question(
         question_for_deleting = await get_question_id_db(question_id=question_id, session=session)
 
         if not question_for_deleting:
-            raise QuestionNotExists
+            raise QuestionNotFound
 
         if check_feedback:
             await delete_feedback_question_id(question_id=question_id, session=session)
@@ -328,8 +337,8 @@ async def delete_question(
                 "details": None
                 }
 
-    except QuestionNotExists:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.QUESTION_NOT_EXISTS)
+    except QuestionNotFound:
+        raise QuestionErrors.question_not_found_404
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

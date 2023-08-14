@@ -2,11 +2,11 @@ from sqladmin import ModelView
 
 from api.auth.auth_models import User
 from api.auth.auth_schemas import Role
-from api.blacklist.blacklist_schemas import BlockedLevel, Blacklist
+from api.blacklist.blacklist_models import Blacklist, BlockedLevel
 from api.feedback.feedback_schemas import Feedback
 from api.question.question_schemas import Question
 from api.rating.rating_schemas import Rating
-from api.section.section_schemas import Section
+from api.section.section_models import Section
 from api.university.university_schames import University
 from api.warning.warning_schemas import WarningClass
 

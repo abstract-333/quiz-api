@@ -1,12 +1,13 @@
 from typing import List, Dict, Any
 
 from fastapi import Depends, HTTPException
+from redis import asyncio as aioredis
 from starlette.requests import Request
 from token_throttler import TokenThrottlerAsync, TokenThrottlerException
 from token_throttler.storage.redis import RedisStorageAsync
+
 from api.auth.auth_models import User
 from api.auth.base_config import unverified_user
-from redis import asyncio as aioredis
 from utilties.error_code import ErrorCode
 
 

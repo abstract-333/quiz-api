@@ -1,12 +1,12 @@
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi_cache.decorator import cache
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
+
 from api.rating.rating_docs import SERVER_ERROR_UNAUTHORIZED_RESPONSE
-from api.university.university_dependency import university_service_dependency
 from api.university.unviversity_service import UniversityService
+from core.dependecies import UOWDep
 
 university_router = APIRouter(
     prefix="/university",
@@ -19,10 +19,10 @@ university_router = APIRouter(
 async def get_universities(
         request: Request,
         response: Response,
-        university_service: Annotated[UniversityService, Depends(university_service_dependency)],
+        uow: UOWDep,
 ):
     try:
-        result = await university_service.get_universities()
+        result = await UniversityService().get_universities(uow=uow)
 
         return {"status": "success",
                 "data": result,

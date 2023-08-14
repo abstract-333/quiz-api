@@ -1,32 +1,44 @@
 import itertools
 from datetime import datetime
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from api.auth.base_config import current_user
-from api.auth.auth_models import user, User
+
+from api.auth.auth_models import user
 from api.blacklist.blacklist_service import get_blocking_level, manage_blocking_level, get_blocking_time
-from database import get_async_session
 from api.feedback.feedback_db import get_rating_supervisor_db
 from api.feedback.feedback_models import feedback
-from api.rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE, POST_RATING_RESPONSES, GET_RATING_RESPONSE, \
-    GET_RATING_SUPERVISOR_RESPONSE
-from api.rating.rating_models import rating
 from api.rating.rating_db import get_rating_user_id, update_rating_db, insert_rating_db, get_last_rating_user
+from api.rating.rating_docs import (
+    SERVER_ERROR_AUTHORIZED_RESPONSE,
+    POST_RATING_RESPONSES,
+    GET_RATING_RESPONSE,
+    GET_RATING_SUPERVISOR_RESPONSE
+)
+from api.rating.rating_errors import Errors as RatingErrors
+from api.rating.rating_models import rating
 from api.rating.rating_schemas import RatingUpdate, RatingCreate, RatingRead
-from api.university.university_dependency import university_service_dependency
+from api.university.university_errors import Errors as UniversityErrors
 from api.university.university_models import university
 from api.university.unviversity_service import UniversityService
-from utilties.custom_exceptions import QuestionsInvalidNumber, NotUser, OutOfUniversityIdException, \
-    UserNotAdminSupervisor, AddedToBlacklist, RaisingBlockingLevel, HighestBlockingLevel, WarnsUserException, \
-    BlockedReturnAfter
-from utilties.error_code import ErrorCode
-from utilties.result_into_list import ResultIntoList
 from api.warning.warning_service import manage_warning_level
+from core.dependecies import UOWDep, CurrentUser
+from database import get_async_session
+from utilties.custom_exceptions import (
+    QuestionsInvalidNumber,
+    NotUser,
+    OutOfUniversityIdException,
+    UserNotAdminSupervisor,
+    AddedToBlacklist,
+    RaisingBlockingLevel,
+    HighestBlockingLevel,
+    WarnsUserException,
+    BlockedReturnAfter
+)
+from utilties.result_into_list import ResultIntoList
 
 rating_router = APIRouter(
     prefix="/rating",
@@ -36,8 +48,10 @@ rating_router = APIRouter(
 
 @rating_router.get("/supervisor", name="supervisor:get best rating", dependencies=[Depends(HTTPBearer())],
                    responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
-async def add_feedback(verified_user: User = Depends(current_user)
-                       , session: AsyncSession = Depends(get_async_session)):
+async def add_feedback(
+        verified_user: CurrentUser,
+        session: AsyncSession = Depends(get_async_session)
+):
     try:
         query = select(
             user.c.username,
@@ -62,8 +76,10 @@ async def add_feedback(verified_user: User = Depends(current_user)
 
 @rating_router.get("/student", name="student:get best rating", dependencies=[Depends(HTTPBearer())],
                    responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
-async def get_rating_students(verified_user: User = Depends(current_user)
-                              , session: AsyncSession = Depends(get_async_session)):
+async def get_rating_students(
+        verified_user: CurrentUser,
+        session: AsyncSession = Depends(get_async_session)
+):
     try:
         query = select(
             user.c.id,
@@ -87,14 +103,14 @@ async def get_rating_students(verified_user: User = Depends(current_user)
 @rating_router.get("/university-students", name="student:get best rating by university",
                    dependencies=[Depends(HTTPBearer())], responses=GET_RATING_RESPONSE)
 async def get_rating_students_university(
-        university_id: int,
-        university_service: Annotated[UniversityService, Depends(university_service_dependency)],
-        verified_user: User = Depends(current_user),
+        uow: UOWDep,
+        verified_user: CurrentUser,
+        university_id: int = Query(gt=0),
         session: AsyncSession = Depends(get_async_session)
 ):
     try:
         # Check whether entered university_id is valid
-        await university_service.get_university_by_id(university_id=university_id)
+        await UniversityService().get_university_by_id(uow=uow, university_id=university_id)
 
         query = select(
             user.c.id,
@@ -113,7 +129,7 @@ async def get_rating_students_university(
         return result
 
     except OutOfUniversityIdException:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.OUT_OF_UNIVERSITY_ID)
+        raise UniversityErrors.invalid_university_index_400
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -122,8 +138,10 @@ async def get_rating_students_university(
 @rating_router.get("/university", name="university:get best rating",
                    dependencies=[Depends(HTTPBearer())],
                    responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
-async def get_rating_universities(verified_user: User = Depends(current_user)
-                                  , session: AsyncSession = Depends(get_async_session)):
+async def get_rating_universities(
+        verified_user: CurrentUser,
+        session: AsyncSession = Depends(get_async_session)
+):
     try:
         query = select(
             rating.c.university_id,
@@ -140,6 +158,7 @@ async def get_rating_universities(verified_user: User = Depends(current_user)
         result = list(itertools.chain(result.parse()))
 
         return result
+
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
 
@@ -151,7 +170,7 @@ async def get_rating_universities(verified_user: User = Depends(current_user)
     responses=SERVER_ERROR_AUTHORIZED_RESPONSE
 )
 async def get_rating_me(
-        verified_user: User = Depends(current_user),
+        verified_user: CurrentUser,
         session: AsyncSession = Depends(get_async_session)
 ):
     try:
@@ -173,7 +192,7 @@ async def get_rating_me(
     responses=GET_RATING_SUPERVISOR_RESPONSE
 )
 async def get_rating_me(
-        verified_user: User = Depends(current_user),
+        verified_user: CurrentUser,
         session: AsyncSession = Depends(get_async_session)
 ):
     """Get supervisor rating"""
@@ -189,7 +208,7 @@ async def get_rating_me(
                 }
 
     except UserNotAdminSupervisor:
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.USER_NOT_ADMIN_SUPERVISOR)
+        raise RatingErrors.user_not_allowed_405
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)
@@ -203,7 +222,7 @@ async def get_rating_me(
 )
 async def add_rating(
         rating_read: RatingRead,
-        verified_user: User = Depends(current_user),
+        verified_user: CurrentUser,
         session: AsyncSession = Depends(get_async_session)
 ):
     global unblocked_after
@@ -265,13 +284,11 @@ async def add_rating(
                     }
 
     except WarnsUserException:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.WARNING_USER)
+        raise RatingErrors.warns_user_400
 
     except (RaisingBlockingLevel, AddedToBlacklist):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorCode.TEMPORARY_BLOCKED
-        )
+        raise RatingErrors.temporary_blocked_400
+
     except BlockedReturnAfter:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -279,13 +296,13 @@ async def add_rating(
         )
 
     except HighestBlockingLevel:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.PERMANENTLY_BLOCKED)
+        raise RatingErrors.permanently_blocked_400
 
     except QuestionsInvalidNumber:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
+        raise RatingErrors.number_of_questions_invalid_400
 
     except NotUser:
-        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=ErrorCode.ONLY_USER)
+        raise RatingErrors.only_user_can_access_405
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

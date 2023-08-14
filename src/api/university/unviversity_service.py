@@ -1,30 +1,37 @@
-from api.university.university_repository import UniversityRepository
 from api.university.university_schames import UniversitySchema
-from utilties.custom_exceptions import OutOfUniversityIdException, NothingFound
-from common.repository import AbstractRepository
-from common.service import Service
+from core.unit_of_work import IUnitOfWork
+from utilties.custom_exceptions import OutOfUniversityIdException
 
 
-class UniversityService(Service[UniversitySchema, UniversitySchema, UniversitySchema]):
-    repo: AbstractRepository = UniversityRepository()
-
-    async def get_universities(self) -> list[UniversitySchema | None]:
+class UniversityService:
+    @staticmethod
+    async def get_universities(uow: IUnitOfWork) -> list[UniversitySchema | None]:
         """Get list of all universities"""
-        universities = await self.get_entities()
-        return universities
+        async with uow:
+            universities = await uow.university.find_by()
+            return universities
 
-    async def get_university_by_name(self, name: str) -> UniversitySchema | None:
+    @staticmethod
+    async def get_university_by_name(uow: IUnitOfWork, name: str) -> UniversitySchema | None:
         """Get university by name"""
-        university = await self.get_entity_by(name=name)
-        return university
+        async with uow:
+            university = await uow.university.find_one(name=name)
+            return university
 
-    async def get_university_by_id(self, university_id: int) -> UniversitySchema | None:
-        """Get university by university_id"""
-        try:
-            university = await self.get_entity_by_id(entity_id=university_id)
+    @staticmethod
+    async def _get_university_by_id(uow: IUnitOfWork, university_id: int) -> UniversitySchema | None:
+        """Get university by university_id without raising exception"""
+        async with uow:
+            university = await uow.university.find_one(id=university_id)
+            return university
 
-        # Raise exception if the university_id not valid
-        except NothingFound:
-            raise OutOfUniversityIdException
+    async def get_university_by_id(self, uow: IUnitOfWork, university_id: int) -> UniversitySchema | None:
+        """Get university by university_id and raise exception if university_id is not valid"""
+        async with uow:
+            university = await self._get_university_by_id(uow=uow, university_id=university_id)
 
-        return university
+            # Check that returned object is not None
+            if not university:
+                raise OutOfUniversityIdException
+
+            return university

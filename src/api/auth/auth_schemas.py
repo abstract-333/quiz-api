@@ -1,4 +1,5 @@
 from typing import Optional
+
 from fastapi_users import schemas
 from pydantic import EmailStr
 from sqlalchemy import Column, String, Integer, JSON

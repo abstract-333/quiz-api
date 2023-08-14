@@ -1,8 +1,10 @@
 import smtplib
 from email.message import EmailMessage
-from utilties.constants import Constants
+
 from celery import Celery
+
 from config import SMTP_USER, SMTP_PASSWORD
+from utilties.constants import Constants
 
 celery = Celery("tasks", broker="redis://localhost:6379")
 

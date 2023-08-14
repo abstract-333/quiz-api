@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from sqlalchemy import Column, Integer, ForeignKey, TIMESTAMP
 
 from api.auth.auth_models import user
-from database import Base
 from api.university.university_models import university
+from database import Base
 
 
 class RatingRead(BaseModel):

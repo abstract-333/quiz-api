@@ -1,5 +1,7 @@
 from datetime import datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from api.blacklist.blacklist_db import get_blacklist_user_db, get_blocked_level_db, update_blacklist_user_level_db, \
     get_unblocked_after_db
 from api.blacklist.blacklist_schemas import BlacklistUpdate
@@ -28,7 +30,7 @@ async def manage_blocking_level(
                 session=session
             )
 
-            if blocking_level_valid["unblocked_after"] == -1:
+            if blocking_level_valid.unblocked_after == -1:
                 raise HighestBlockingLevel
 
             else:
@@ -70,7 +72,7 @@ async def get_blocking_time(
     blocking_record = await get_unblocked_after(user_id=user_id, session=session)
     if blocking_record:
 
-        blocked_at = blocking_record["blocked_at"]
+        blocked_at = blocking_record.blocked_at
         unblocked_after = blocking_record["unblocked_after"]
 
         # Check if permanently blocked

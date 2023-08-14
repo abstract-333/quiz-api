@@ -1,6 +1,6 @@
-from api.section.section_schemas import Section
-from common.sqlalchemy_repository import SQLAlchemyRepository
+from api.section.section_models import Section
+from core.repository import SQLAlchemyRepository
 
 
 class SectionRepository(SQLAlchemyRepository):
-    model = Section
+    main_model = Section

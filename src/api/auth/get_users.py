@@ -1,14 +1,14 @@
 import itertools
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api.auth.auth_docs import SEARCH_USER_RESPONSE
-from api.auth.auth_models import User, user
-from api.auth.base_config import current_superuser
+from api.auth.auth_models import user
+from core.dependecies import CurrentSuperUser
 from database import get_async_session
 from utilties.custom_exceptions import InvalidPage
 from utilties.error_code import ErrorCode
@@ -26,10 +26,10 @@ search_users_router = APIRouter(
     responses=SEARCH_USER_RESPONSE
 )
 async def get_users(
-        page: int = 1,
+        verified_superuser: CurrentSuperUser,
+        page: int = Query(gt=0, default=1),
         username: str = '',
         email: str = '',
-        verified_superuser: User = Depends(current_superuser),
         session: AsyncSession = Depends(get_async_session)
 ):
     """Get users by username, email or both"""

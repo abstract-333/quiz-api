@@ -1,18 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, FastAPI
+from fastapi import APIRouter, Depends, HTTPException, FastAPI, Query
 from fastapi.security import HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from numpy import random as num_random
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
-from api.auth.auth_models import User
-from database import get_async_session
-from api.quiz.quiz_docs import GET_QUIZ_RESPONSES
 from api.quiz.quiz_db import get_quiz_db
+from api.quiz.quiz_docs import GET_QUIZ_RESPONSES
+from api.quiz.quiz_errors import Errors
+from core.dependecies import CurrentUser
+from database import get_async_session
 from utilties.custom_exceptions import QuestionsInvalidNumber, EmptyList
-from utilties.error_code import ErrorCode
-from api.auth.base_config import current_user
 
 quiz_app = FastAPI()
 quiz_router = APIRouter(
@@ -29,8 +28,8 @@ quiz_router = APIRouter(
 async def get_quiz(
         request: Request,
         response: Response,
-        number_questions: int = 50,
-        verified_user: User = Depends(current_user),
+        verified_user: CurrentUser,
+        number_questions: int = Query(default=50, lt=51, gt=19),
         session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
@@ -71,10 +70,10 @@ async def get_quiz(
                 }
 
     except EmptyList:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ErrorCode.EMPTY_LIST)
+        raise Errors.empty_list_returned_404
 
     except QuestionsInvalidNumber:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorCode.QUESTIONS_NUMBER_INVALID)
+        raise Errors.number_of_requested_questions_invalid_400
 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=Exception)

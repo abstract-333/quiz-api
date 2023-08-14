@@ -33,8 +33,8 @@ class FeedbackAlreadySent(Exception):
     pass
 
 
-class QuestionNotExists(Exception):
-    """QUESTION_NOT_EXISTS"""
+class QuestionNotFound(Exception):
+    """QUESTION_NOT_FOUND"""
     pass
 
 
@@ -63,8 +63,8 @@ class InvalidPage(Exception):
     pass
 
 
-class FeedbackNotExists(Exception):
-    """FEEDBACK_NOT_EXISTS"""
+class FeedbackNotFound(Exception):
+    """FEEDBACK_NOT_FOUND"""
     pass
 
 
@@ -120,9 +120,4 @@ class BlockedReturnAfter(Exception):
 
 class EmptyList(Exception):
     """EMPTY_LIST"""
-    pass
-
-
-class NothingFound(Exception):
-    """NO_ROW_FOUND"""
     pass

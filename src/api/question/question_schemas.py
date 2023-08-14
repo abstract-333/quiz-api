@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, JSON, Boolean
-from typing import Optional
+
 from api.auth.auth_models import user
 from database import Base
-from api.section.section_models import section
 
 
 class QuestionRead(BaseModel):
@@ -46,5 +47,5 @@ class Question(Base):
     reference_link = Column(String(length=200), nullable=True)
     added_by = Column(Integer, ForeignKey(user.c.id), nullable=False)
     added_at = Column(TIMESTAMP, default=datetime.utcnow)
-    section_id = Column(Integer, ForeignKey(section.c.id))
+    section_id = Column(Integer, ForeignKey("section.id"))
     active = Column(Boolean, default=False, nullable=False)

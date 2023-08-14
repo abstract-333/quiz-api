@@ -1,16 +1,17 @@
+from fastapi import FastAPI
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
 from sqladmin import Admin
 
-from all_routers_views import all_routers, all_admin_views
+from all_routers_and_views import all_routers, all_admin_views
 from api.admin_panel.admin_auth import AdminAuth
 from config import SECRET_KEY
 from database import engine
-from redis import asyncio as aioredis
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi import FastAPI
 
 app: FastAPI = FastAPI(
     title="Quiz App",
+    version="1.0.0",
     # dependencies=[Depends(BucketLimiter())]
 )
 

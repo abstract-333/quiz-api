@@ -1,5 +1,6 @@
 from fastapi_users.exceptions import UserNotExists
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+
 from api.auth.auth_manager import UserManager
 from api.auth.auth_models import User
 from database import async_session_maker

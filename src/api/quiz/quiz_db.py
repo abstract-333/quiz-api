@@ -1,6 +1,8 @@
 import itertools
+
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from api.question.question_models import question
 from utilties.result_into_list import ResultIntoList
 

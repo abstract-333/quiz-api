@@ -1,13 +1,12 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi_cache.decorator import cache
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
+
 from api.rating.rating_docs import SERVER_ERROR_UNAUTHORIZED_RESPONSE
 from api.section.section_service import SectionService
-from api.section.section_depedency import section_service_dependency
+from core.dependecies import UOWDep
 
 section_router = APIRouter(
     prefix="/section",
@@ -21,11 +20,11 @@ section_router = APIRouter(
 async def get_sections(
         request: Request,
         response: Response,
-        section_service: Annotated[SectionService, Depends(section_service_dependency)],
+        uow: UOWDep,
 ) -> dict:
     """Get all sections"""
     try:
-        sections = await section_service.get_sections()
+        sections = await SectionService().get_sections(uow=uow)
 
         return {"status": "success",
                 "data": sections,

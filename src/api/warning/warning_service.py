@@ -2,9 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.blacklist.blacklist_db import add_blacklist_user_db
 from api.blacklist.blacklist_schemas import BlacklistCreate
-from utilties.custom_exceptions import AddedToBlacklist, WarnsUserException
 from api.warning.warning_db import get_warning_db, delete_warning_db, update_warning_level_db, add_warning_db
 from api.warning.warning_schemas import WarningUpdate, WarningCreate
+from utilties.custom_exceptions import AddedToBlacklist, WarnsUserException
 
 
 async def manage_warning_level(user_id: int, session: AsyncSession):

@@ -2,6 +2,7 @@ import itertools
 
 from sqlalchemy import select, update, insert, desc, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from api.rating.rating_models import rating
 from api.rating.rating_schemas import RatingUpdate, RatingCreate
 from utilties.result_into_list import ResultIntoList
