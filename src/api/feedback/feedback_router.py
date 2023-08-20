@@ -85,7 +85,7 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: CurrentUser,
                                          question_author_id=result_question[0]["added_by"]
                                          )
 
-        stmt = insert(feedback).values(**feedback_create.dict())
+        stmt = insert(feedback).values(**feedback_create.model_dump())
         await session.execute(stmt)
         await session.commit()
 
@@ -217,7 +217,7 @@ async def patch_feedback(
                                          question_author_id=question_result[0]["question_author_id"]
                                          )
 
-        stmt = update(feedback).values(**feedback_create.dict()).where(feedback.c.id == feedback_id)
+        stmt = update(feedback).values(**feedback_create.model_dump()).where(feedback.c.id == feedback_id)
         await session.execute(stmt)
         await session.commit()
 
