@@ -40,8 +40,6 @@ admin = Admin(app=app, engine=engine, authentication_backend=authentication_back
 async def startup_event():
     redis = await aioredis.from_url("redis://localhost:6379", max_connections=100)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    # await FastAPILimiter.init(redis, prefix="limiter")
-    # app.state.limiter = limiter
 
 
 @app.on_event("shutdown")

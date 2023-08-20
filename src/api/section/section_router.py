@@ -14,7 +14,7 @@ section_router = APIRouter(
 )
 
 
-@cache(expire=100)
+@cache(expire=3600 * 24)
 @section_router.get("/get-all", name="section:section get-all",
                     responses=SERVER_ERROR_UNAUTHORIZED_RESPONSE)
 async def get_sections(

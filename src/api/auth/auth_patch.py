@@ -66,7 +66,8 @@ async def update_me(
         await UniversityService().get_university_by_id(uow=uow, university_id=user_update.university_id)
 
         # Check whether user changed section_id to valid one
-        await SectionService().get_section_by_id(uow=uow, section_id=user_update.section_id)
+        if user_update.section_id is not None:
+            await SectionService().get_section_by_id(uow=uow, section_id=user_update.section_id)
 
         if verified_user.role_id == 1 and user_update.university_id != verified_user.university_id:
             # Prevent user from changing own university if he had taken quiz before
@@ -142,8 +143,9 @@ async def update_user(
         # Check whether user changed university_id to valid one
         await UniversityService().get_university_by_id(uow=uow, university_id=user_update.university_id)
 
-        # Check whether user changed section_id to valid one
-        await SectionService().get_section_by_id(uow=uow, section_id=user_update.section_id)
+        if user_update.section_id is not None:
+            # Check whether user changed section_id to valid one
+            await SectionService().get_section_by_id(uow=uow, section_id=user_update.section_id)
 
         user = await user_manager.update(
             user_update, user, safe=False, request=request
