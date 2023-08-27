@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Annotated
 
 import jwt
 from fastapi import Depends, Request
@@ -11,10 +11,12 @@ from starlette.responses import HTMLResponse
 from api.auth.auth_models import User
 from api.auth.auth_schemas import UserCreate
 from config import SECRET_KEY
-from database import get_async_session
+from db.database import get_async_session
 from utilties.constants import Constants
 from utilties.email import send_email
 from utilties.password_manager import PasswordManager
+
+Session = Annotated[AsyncSession, Depends(get_async_session)]
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
@@ -132,9 +134,11 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         return created_user
 
 
-async def get_user_db(session: AsyncSession = Depends(get_async_session)) -> SQLAlchemyUserDatabase:
+async def get_user_db(
+        session: Session
+) -> SQLAlchemyUserDatabase:
     yield SQLAlchemyUserDatabase(session, User)
 
 
-async def get_user_manager(user_db=Depends(get_user_db)) -> UserManager:
+async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)) -> UserManager:
     yield UserManager(user_db, PasswordManager.password_helper)

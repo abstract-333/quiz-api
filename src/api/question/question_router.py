@@ -1,8 +1,6 @@
 from collections import Counter
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api.auth.base_config import current_superuser
@@ -34,8 +32,7 @@ from api.question.question_schemas import QuestionCreate, QuestionRead, Question
 from api.rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
 from api.section.section_errors import Errors as SectionErrors
 from api.section.section_service import SectionService
-from core.dependecies import UOWDep, CurrentUser
-from database import get_async_session
+from core.dependecies import UOWDep, CurrentUser, Session
 from utilties.custom_exceptions import (
     DuplicatedQuestionException,
     UserNotAdminSupervisor,
@@ -69,8 +66,11 @@ async def check_question_validity_user_grants(received_question: QuestionRead, r
 
 @question_router.post("/add", name="question:add question", dependencies=[Depends(HTTPBearer())],
                       responses=ADD_QUESTION_RESPONSES)
-async def add_question(added_question: QuestionRead, verified_user: CurrentUser,
-                       session: AsyncSession = Depends(get_async_session)) -> dict:
+async def add_question(
+        added_question: QuestionRead,
+        verified_user: CurrentUser,
+        session: Session
+) -> dict:
     try:
 
         await check_question_validity_user_grants(received_question=added_question, role_id=verified_user.role_id)
@@ -120,8 +120,8 @@ async def add_question(added_question: QuestionRead, verified_user: CurrentUser,
                      responses=GET_QUESTION_RESPONSES)
 async def get_question_me(
         verified_user: CurrentUser,
+        session: Session,
         page: int = Query(gt=0, default=1),
-        session: AsyncSession = Depends(get_async_session),
 ) -> dict:
     try:
         if page < 1:
@@ -145,9 +145,9 @@ async def get_question_me(
 async def get_question_section_id(
         uow: UOWDep,
         verified_user: CurrentUser,
+        session: Session,
         section_id: int = Query(gt=0),
         page: int = Query(gt=0, default=1),
-        session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
         if page < 1:
@@ -190,9 +190,9 @@ async def get_question_section_id(
                        responses=PATCH_QUESTION_RESPONSES)
 async def patch_question(
         edited_question: QuestionRead,
+        session: Session,
         verified_user: CurrentUser,
         question_id: int = Query(gt=0),
-        session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
 
@@ -259,7 +259,7 @@ async def patch_question(
 async def get_wrong_solved(
         verified_user: CurrentUser,
         list_question_id: list[int],
-        session: AsyncSession = Depends(get_async_session)) -> dict:
+        session: Session) -> dict:
     try:
 
         questions = await get_question_ref(list_questions=list_question_id, session=session)
@@ -281,8 +281,8 @@ async def get_wrong_solved(
 )
 async def make_question_inactive(
         verified_user: CurrentUser,
+        session: Session,
         question_id: int = Query(gt=0),
-        session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
 
@@ -315,8 +315,8 @@ async def make_question_inactive(
     responses=DELETE_QUESTION_RESPONSES
 )
 async def delete_question(
+        session: Session,
         question_id: int = Query(gt=0),
-        session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
 

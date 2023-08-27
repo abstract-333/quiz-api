@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, FastAPI, Query
 from fastapi.security import HTTPBearer
 from numpy import random as num_random
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
@@ -9,8 +8,7 @@ from starlette.responses import Response
 from api.quiz.quiz_db import get_quiz_db
 from api.quiz.quiz_docs import GET_QUIZ_RESPONSES
 from api.quiz.quiz_errors import Errors
-from core.dependecies import CurrentUser
-from database import get_async_session
+from core.dependecies import CurrentUser, Session
 from utilties.custom_exceptions import QuestionsInvalidNumber, EmptyList
 
 quiz_app = FastAPI()
@@ -29,8 +27,8 @@ async def get_quiz(
         request: Request,
         response: Response,
         verified_user: CurrentUser,
+        session: Session,
         number_questions: int = Query(default=50, lt=51, gt=19),
-        session: AsyncSession = Depends(get_async_session)
 ) -> dict:
     try:
         # Check if number of questions requested is valid

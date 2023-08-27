@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy import Integer, Column, ForeignKey
 
 from api.auth.auth_models import user
-from database import Base
+from db.database import Base
 
 
 class WarningCreate(BaseModel):

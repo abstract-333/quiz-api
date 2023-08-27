@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
 from fastapi_users import exceptions, schemas
 from fastapi_users.manager import BaseUserManager
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.auth_docs import GET_DELETE_USER_ID_RESPONSE, PATCH_USER_ID_RESPONSE, PATCH_ME_RESPONSE
 from api.auth.auth_manager import get_user_manager
@@ -14,8 +13,7 @@ from api.rating.rating_db import get_rating_user_id, delete_rating_db
 from api.rating.rating_docs import SERVER_ERROR_AUTHORIZED_RESPONSE
 from api.section.section_service import SectionService
 from api.university.unviversity_service import UniversityService
-from core.dependecies import UOWDep, CurrentUser, CurrentSuperUser
-from database import get_async_session
+from core.dependecies import UOWDep, CurrentUser, CurrentSuperUser, Session
 from utilties.custom_exceptions import OutOfUniversityIdException, NotAllowedPatching, OutOfSectionIdException
 from utilties.error_code import ErrorCode
 
@@ -57,9 +55,9 @@ async def update_me(
         request: Request,
         user_update: UserUpdate,  # type: ignore
         uow: UOWDep,
+        session: Session,
         verified_user: CurrentUser,
         user_manager: BaseUserManager = Depends(get_user_manager),
-        session: AsyncSession = Depends(get_async_session),
 ):
     try:
         # Check whether user changed university_id to valid one
@@ -183,9 +181,9 @@ async def update_user(
 )
 async def delete_user(
         current_superuser: CurrentSuperUser,
+        session: Session,
         user_for_delete=Depends(get_user_or_404),
         user_manager: BaseUserManager = Depends(get_user_manager),
-        session: AsyncSession = Depends(get_async_session)
 ):
     user_id = user_for_delete.id
     if user_for_delete.role_id == 1:

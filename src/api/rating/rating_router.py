@@ -1,10 +1,8 @@
 import itertools
 from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
 from sqlalchemy import select, func, desc
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api.auth.auth_models import user
@@ -25,8 +23,7 @@ from api.university.university_errors import Errors as UniversityErrors
 from api.university.university_models import university
 from api.university.unviversity_service import UniversityService
 from api.warning.warning_service import manage_warning_level
-from core.dependecies import UOWDep, CurrentUser
-from database import get_async_session
+from core.dependecies import UOWDep, CurrentUser, Session
 from utilties.custom_exceptions import (
     QuestionsInvalidNumber,
     NotUser,
@@ -50,7 +47,7 @@ rating_router = APIRouter(
                    responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
 async def add_feedback(
         verified_user: CurrentUser,
-        session: AsyncSession = Depends(get_async_session)
+        session: Session
 ):
     try:
         query = select(
@@ -78,7 +75,7 @@ async def add_feedback(
                    responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
 async def get_rating_students(
         verified_user: CurrentUser,
-        session: AsyncSession = Depends(get_async_session)
+        session: Session
 ):
     try:
         query = select(
@@ -105,8 +102,8 @@ async def get_rating_students(
 async def get_rating_students_university(
         uow: UOWDep,
         verified_user: CurrentUser,
+        session: Session,
         university_id: int = Query(gt=0),
-        session: AsyncSession = Depends(get_async_session)
 ):
     try:
         # Check whether entered university_id is valid
@@ -140,7 +137,7 @@ async def get_rating_students_university(
                    responses=SERVER_ERROR_AUTHORIZED_RESPONSE)
 async def get_rating_universities(
         verified_user: CurrentUser,
-        session: AsyncSession = Depends(get_async_session)
+        session: Session
 ):
     try:
         query = select(
@@ -171,7 +168,7 @@ async def get_rating_universities(
 )
 async def get_rating_me(
         verified_user: CurrentUser,
-        session: AsyncSession = Depends(get_async_session)
+        session: Session
 ):
     try:
         rating_user = await get_rating_user_id(user_id=verified_user.id, session=session)
@@ -193,7 +190,7 @@ async def get_rating_me(
 )
 async def get_rating_me(
         verified_user: CurrentUser,
-        session: AsyncSession = Depends(get_async_session)
+        session: Session
 ):
     """Get supervisor rating"""
     try:
@@ -223,7 +220,7 @@ async def get_rating_me(
 async def add_rating(
         rating_read: RatingRead,
         verified_user: CurrentUser,
-        session: AsyncSession = Depends(get_async_session)
+        session: Session
 ):
     global unblocked_after
     try:

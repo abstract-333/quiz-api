@@ -7,7 +7,7 @@ from sqlalchemy.dialects.mysql import SMALLINT
 
 from api.auth.auth_models import user
 from api.question.question_models import question
-from database import Base
+from db.database import Base
 
 
 class FeedbackRead(BaseModel):

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
 from sqlalchemy import insert, update
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api.feedback.feedback_db import (
@@ -23,8 +22,7 @@ from api.feedback.feedback_errors import Errors
 from api.feedback.feedback_models import feedback
 from api.feedback.feedback_schemas import FeedbackRead, FeedbackUpdate, FeedbackCreate
 from api.question.question_db import get_question_id_db
-from core.dependecies import CurrentUser
-from database import get_async_session
+from core.dependecies import CurrentUser, Session
 from utilties.custom_exceptions import (
     FeedbackAlreadySent,
     QuestionNotFound,
@@ -46,8 +44,10 @@ feedback_router = APIRouter(
 
 @feedback_router.post("/add", name="feedback:add feedback", dependencies=[Depends(HTTPBearer())],
                       responses=ADD_FEEDBACK_RESPONSES)
-async def add_feedback(added_feedback: FeedbackRead, verified_user: CurrentUser,
-                       session: AsyncSession = Depends(get_async_session)):
+async def add_feedback(
+        added_feedback: FeedbackRead, verified_user: CurrentUser,
+        session: Session
+):
     try:
 
         if added_feedback.rating not in (1, 2, 3, 4, 5):
@@ -117,8 +117,9 @@ async def add_feedback(added_feedback: FeedbackRead, verified_user: CurrentUser,
                      responses=GET_FEEDBACK_SENT_RESPONSES)
 async def get_sent_feedback(
         verified_user: CurrentUser,
+        session: Session,
         page: int = Query(gt=0, default=1),
-        session: AsyncSession = Depends(get_async_session)):
+):
     try:
         if page < 1:
             raise InvalidPage
@@ -141,8 +142,9 @@ async def get_sent_feedback(
                      responses=GET_FEEDBACK_RECEIVED_RESPONSES)
 async def get_sent_received(
         verified_user: CurrentUser,
+        session: Session,
         page: int = Query(gt=0, default=1),
-        session: AsyncSession = Depends(get_async_session)):
+):
     try:
         if verified_user.role_id == 1:
             raise UserNotAdminSupervisor
@@ -172,8 +174,9 @@ async def get_sent_received(
 async def patch_feedback(
         edited_feedback: FeedbackUpdate,
         verified_user: CurrentUser,
+        session: Session,
         feedback_id: int = Query(gt=0),
-        session: AsyncSession = Depends(get_async_session)):
+):
     try:
         if edited_feedback.rating not in (1, 2, 3, 4, 5):
             raise RatingException
@@ -246,8 +249,8 @@ async def patch_feedback(
                         dependencies=[Depends(HTTPBearer())], responses=DELETE_FEEDBACK_RESPONSES)
 async def delete_feedback(
         verified_user: CurrentUser,
+        session: Session,
         feedback_id: int = Query(gt=0),
-        session: AsyncSession = Depends(get_async_session)
 ):
     try:
 

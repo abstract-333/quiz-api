@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, ForeignKey, TIMESTAMP
 
 from api.auth.auth_models import user
 from api.university.university_models import university
-from database import Base
+from db.database import Base
 
 
 class RatingRead(BaseModel):

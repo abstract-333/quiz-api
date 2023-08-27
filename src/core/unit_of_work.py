@@ -7,7 +7,7 @@ from api.blacklist.blacklist_models import Blacklist, BlockedLevel
 from api.section.section_repository import SectionRepository
 from api.university.university_repository import UniversityRepository
 from core.repository import SQLAlchemyRepository
-from database import async_session_maker
+from db.database import async_session_maker
 
 
 class BlacklistRepository(SQLAlchemyRepository):

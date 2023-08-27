@@ -2,7 +2,7 @@ from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.section.section_schemas import SectionSchema
-from database import Base
+from db.database import Base
 
 
 class Section(Base):

@@ -3,13 +3,12 @@ import itertools
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import HTTPBearer
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api.auth.auth_docs import SEARCH_USER_RESPONSE
 from api.auth.auth_models import user
-from core.dependecies import CurrentSuperUser
-from database import get_async_session
+from api.auth.auth_schemas import UserRead
+from core.dependecies import CurrentSuperUser, Session
 from utilties.custom_exceptions import InvalidPage
 from utilties.error_code import ErrorCode
 from utilties.result_into_list import ResultIntoList
@@ -27,10 +26,10 @@ search_users_router = APIRouter(
 )
 async def get_users(
         verified_superuser: CurrentSuperUser,
+        session: Session,
         page: int = Query(gt=0, default=1),
         username: str = '',
         email: str = '',
-        session: AsyncSession = Depends(get_async_session)
 ):
     """Get users by username, email or both"""
     try:
@@ -41,18 +40,7 @@ async def get_users(
         page -= 1
         page *= 10
 
-        query = select(
-            user.c.id,
-            user.c.username,
-            user.c.email,
-            user.c.role_id,
-            user.c.university_id,
-            user.c.phone,
-            user.c.section_id,
-            user.c.registered_at,
-            user.c.is_active,
-            user.c.is_superuser,
-            user.c.is_verified,)\
+        query = select(UserRead)\
             .filter(
             user.c.id != verified_superuser.id,
             user.c.username.like(f"%{username}%"),

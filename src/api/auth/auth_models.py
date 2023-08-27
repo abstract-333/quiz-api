@@ -5,7 +5,7 @@ from sqlalchemy import MetaData, Table, Column, Integer, String, TIMESTAMP, Fore
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.university.university_models import university
-from database import Base
+from db.database import Base
 
 metadata = MetaData()
 

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey, JSON, Boolean
 
 from api.auth.auth_models import user
-from database import Base
+from db.database import Base
 
 
 class QuestionRead(BaseModel):

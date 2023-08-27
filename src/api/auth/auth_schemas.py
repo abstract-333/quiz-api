@@ -4,7 +4,7 @@ from fastapi_users import schemas
 from pydantic import EmailStr
 from sqlalchemy import Column, String, Integer, JSON
 
-from database import Base
+from db.database import Base
 
 
 class UserRead(schemas.BaseUser[int]):
