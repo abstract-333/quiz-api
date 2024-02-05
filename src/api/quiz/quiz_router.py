@@ -11,7 +11,6 @@ from api.quiz.quiz_errors import Errors
 from core.dependecies import CurrentUser, Session
 from utilties.custom_exceptions import QuestionsInvalidNumber, EmptyList
 
-quiz_app = FastAPI()
 quiz_router = APIRouter(
     prefix="/quiz",
     tags=["Quiz"]
