@@ -69,6 +69,8 @@ $ uvicorn app:app --reload
 
 ## UML:
 
+### _Note: If one of the images is not clear enough, please open it in new tab)_
+
 ### 1. Use Case Diagram:
 
 ![use_case](./images/use_case.png)
