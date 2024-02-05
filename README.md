@@ -68,6 +68,7 @@ $ uvicorn app:app --reload
 ![db_erd](./images/db_erd.png)
 
 ## UML:
+### _Note: If one of images isn not clear, please it in new tab)_
 
 ### 1. Use Case Diagram:
 
