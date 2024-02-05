@@ -71,29 +71,29 @@ $ uvicorn app:app --reload
 
 ### 1. Use Case Diagram:
 
-<img alt="use_case" src="./images/use_case.png" style="background-color:white"/>
+![use_case](./images/use_case.png)
 
 ### 2. Business Process Model and Notation (BPMN):
 
 * #### General BPMN of project
 
-<img alt="general_bpmn" src="./images/bpmn.png" style="background-color:white"/>
+![general_bpmn](./images/bpmn.png)
 
 * #### Manage users - BPMN
 
-<img alt="manage_users_bpmn" src="./images/manage_users_bpmn.png" style="background-color:white"/>
+![manage_users_bpmn](./images/manage_users_bpmn.png)
 
 * #### Manage Feedback - BPMN
 
-<img alt="manage_feedback_bpmn" src="./images/manage_feedback_bpmn.png" style="background-color:white"/>
+![manage_feedback_bpmn](./images/manage_feedback_bpmn.png)
 
 * #### View Leaderboard - BPMN
 
-<img alt="view_leaderboard_bpmn" src="./images/view_leaderboard_bpmn.png" style="background-color:white"/>
+![view_leaderboard_bpmn](./images/view_leaderboard_bpmn.png)
 
 * #### Manage Questions - BPMN
 
-<img alt="manage_questions_bpmn" src="./images/manage_questions_bpmn.png" style="background-color:white"/>
+![manage_questions_bpmn](./images/manage_questions_bpmn.png)
 
 ## Routers:
 
